@@ -1,0 +1,135 @@
+import 'package:flutter/material.dart';
+
+import '../logic/betting_math.dart';
+import '../logic/game_state.dart';
+import 'motion_effects.dart';
+
+/// Thanh tom tat duoi san keo: mo sidebar phieu cuoc + nut da vong.
+/// Sau khi da vong: hien ket qua tung phieu + nut boc vong moi.
+class BetSlipPanel extends StatelessWidget {
+  const BetSlipPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListenableBuilder(
+      listenable: gameState,
+      builder: (context, _) {
+        final g = gameState;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            border: Border(top: BorderSide(color: scheme.outlineVariant)),
+          ),
+          child: g.roundPlayed ? _results(context, g) : _summary(context, g),
+        );
+      },
+    );
+  }
+
+  /// Truoc khi da: nut mo sidebar phieu + nut da vong.
+  Widget _summary(BuildContext context, GameState g) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasContent = g.slip.isNotEmpty || g.pending.isNotEmpty;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!hasContent)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Bấm vào odds để chọn kèo — phiếu cược trượt ra từ cạnh phải.',
+              style:
+                  TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.receipt_long),
+                label: Text(hasContent
+                    ? 'Phiếu cược: ${g.slip.length} chọn • ${g.pending.length} chờ'
+                    : 'Mở phiếu cược'),
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: FilledButton.tonalIcon(
+                icon: const SpinningBallIcon(size: 16),
+                label: Text('Đá vòng ${g.roundNumber}'),
+                onPressed: () => g.playRound(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Sau khi da: ket qua cac phieu + nut vong moi.
+  Widget _results(BuildContext context, GameState g) {
+    final scheme = Theme.of(context).colorScheme;
+    final double roundNet =
+        g.lastResults.fold(0.0, (double s, b) => s + b.net);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (g.lastResults.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text('Vòng này bạn không đặt phiếu nào.',
+                style:
+                    TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+          )
+        else ...[
+          for (final b in g.lastResults)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Row(
+                children: [
+                  Icon(b.won ? Icons.check_circle : Icons.cancel,
+                      size: 15,
+                      color: b.won ? Colors.lightGreen : scheme.error),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${b.legs == 1 ? "Đơn" : "Xiên ${b.legs}"} '
+                      '@${b.totalOdds.toStringAsFixed(2)} — cược ${fmtMoney(b.stake)}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Text(fmtK(b.net),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: b.won ? Colors.lightGreen : scheme.error,
+                      )),
+                ],
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              'Vòng này: ${fmtK(roundNet)}   •   Số dư: ${fmtMoney(g.balance)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => g.newRound(),
+            icon: const Icon(Icons.arrow_forward),
+            label: Text('Vòng ${g.roundNumber + 1} — bốc kèo mới'),
+          ),
+        ),
+      ],
+    );
+  }
+}

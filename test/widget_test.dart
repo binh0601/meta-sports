@@ -1,0 +1,57 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:house_edge_demo/logic/auth_state.dart';
+import 'package:house_edge_demo/main.dart';
+
+void main() {
+  tearDown(() async => authState.logout());
+
+  testWidgets('Man hinh dang nhap: du email/Google/dang ky', (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    expect(find.text('MEGA SPORTS'), findsOneWidget);
+    expect(find.text('ĐĂNG NHẬP'), findsOneWidget);
+    expect(find.text('Tiếp tục với Google'), findsOneWidget);
+    expect(find.textContaining('Đăng ký ngay'), findsOneWidget);
+  });
+
+  testWidgets('admin/123456 -> vao dashboard nha cai (bypass Firebase)',
+      (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    await tester.enterText(find.byType(TextField).at(0), 'admin');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bảng điều khiển Nhà cái'), findsOneWidget);
+    expect(authState.role, UserRole.admin);
+  });
+
+  testWidgets('admin sai mat khau -> bao loi', (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    await tester.enterText(find.byType(TextField).at(0), 'admin');
+    await tester.enterText(find.byType(TextField).at(1), 'sai-roi');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sai mật khẩu admin.'), findsOneWidget);
+    expect(authState.isLoggedIn, false);
+  });
+
+  testWidgets('email login khi Firebase chua cau hinh -> bao loi ro rang',
+      (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    await tester.enterText(
+        find.byType(TextField).at(0), 'user@example.com');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Firebase chưa được cấu hình'), findsOneWidget);
+    expect(authState.isLoggedIn, false);
+  });
+
+  testWidgets('link dang ky mo man Register', (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    await tester.tap(find.textContaining('Đăng ký ngay'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tạo tài khoản người chơi'), findsOneWidget);
+    expect(find.text('ĐĂNG KÝ'), findsOneWidget);
+  });
+}
