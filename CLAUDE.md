@@ -56,6 +56,9 @@ flutter build apk --debug      # Build APK debug
 
 ## Git Flow (bắt buộc với cả người và AI tool)
 
+Bản đầy đủ cho thành viên nhóm: `docs/git-workflow.md` (checklist trước khi
+code, đặt tên branch, quy trình PR). Sửa quy tắc ở một file thì cập nhật cả hai.
+
 **Nguyên tắc:** `main` luôn ổn định — build được, `flutter test` pass. **Cấm push
 thẳng lên `main`**; mọi thay đổi đi qua branch + Pull Request.
 
