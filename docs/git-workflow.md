@@ -18,10 +18,11 @@ feature branch ──PR──▶ dev ──PR (theo milestone)──▶ main
 
 - **`main`**: bản ổn định để nộp/demo. Chỉ nhận PR từ `dev`.
 - **`dev`**: nhánh tích hợp hằng ngày. PR tính năng trỏ vào đây.
-- **Feature branch**: nơi duy nhất được push trực tiếp.
-- **Thành viên không có quyền write trên repo gốc** (mô hình fork): bấm
-  **Fork** repo về tài khoản mình → code trên fork → mở PR từ fork vào `dev`
-  của repo gốc. Nhớ **Sync fork** thường xuyên để không bị tụt.
+- **Feature branch**: nơi duy nhất được push trực tiếp. Cả nhóm là
+  collaborator của repo chung — push branch của mình lên repo, KHÔNG cần fork.
+- **Review**: mọi PR do **chủ repo (binh0601) review và merge**. GitHub free
+  không khóa cứng được repo private — quy tắc này chạy bằng kỷ luật nhóm:
+  thấy ai push thẳng main/dev thì nhắc nhau trong nhóm chat.
 
 ## Trước khi code — checklist 4 bước
 
@@ -119,6 +120,6 @@ git checkout dev && git pull                   # 1. cap nhat
 git checkout -b feat/ten-tinh-nang             # 2. tao branch
 # ... code + commit nho ...
 flutter analyze && flutter test                # 3. kiem tra
-git push -u origin feat/ten-tinh-nang          # 4. push (fork: push len fork)
+git push -u origin feat/ten-tinh-nang          # 4. push
 # 5. mo PR vao dev -> chu repo review -> squash merge -> xoa branch
 ```
