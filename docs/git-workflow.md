@@ -6,20 +6,33 @@ hai file phải khớp nhau, sửa một nơi thì sửa cả nơi kia.
 
 ## Nguyên tắc số 1
 
-> `main` luôn ổn định: checkout về là build được, `flutter test` pass.
-> **Không ai push thẳng lên `main`** — kể cả người tạo repo.
-> Mọi thay đổi (code, docs, test) đều đi qua branch riêng + Pull Request.
+> `main` và `dev` là nhánh chung: **không ai push thẳng** — kể cả người tạo repo.
+> Mọi thay đổi (code, docs, test) đi qua branch riêng + Pull Request, và chỉ
+> **chủ repo (binh0601) review + merge**.
+
+## Mô hình nhánh & quyền
+
+```
+feature branch ──PR──▶ dev ──PR (theo milestone)──▶ main
+```
+
+- **`main`**: bản ổn định để nộp/demo. Chỉ nhận PR từ `dev`.
+- **`dev`**: nhánh tích hợp hằng ngày. PR tính năng trỏ vào đây.
+- **Feature branch**: nơi duy nhất được push trực tiếp.
+- **Thành viên không có quyền write trên repo gốc** (mô hình fork): bấm
+  **Fork** repo về tài khoản mình → code trên fork → mở PR từ fork vào `dev`
+  của repo gốc. Nhớ **Sync fork** thường xuyên để không bị tụt.
 
 ## Trước khi code — checklist 4 bước
 
-1. **Cập nhật main mới nhất:**
+1. **Cập nhật dev mới nhất:**
    ```bash
-   git checkout main
+   git checkout dev
    git pull
    ```
 2. **Xem mình định làm gì** — đọc plan trong `plans/` hoặc issue được giao.
    Chưa rõ yêu cầu thì hỏi trong nhóm trước, đừng code mò.
-3. **Tạo branch từ main, đặt tên đúng chuẩn** (xem mục dưới):
+3. **Tạo branch từ dev, đặt tên đúng chuẩn** (xem mục dưới):
    ```bash
    git checkout -b feat/ten-tinh-nang
    ```
@@ -67,22 +80,24 @@ Lưu ý Windows: chạy test theo cả file (`flutter test test/widget_test.dart
 ## Pull Request
 
 1. Push branch: `git push -u origin feat/ten-tinh-nang`
-2. Mở PR vào `main` trên GitHub. Mô tả PR phải có:
+2. Mở PR vào `dev` trên GitHub (PR `dev` → `main` chỉ chủ repo mở theo
+   milestone). Mô tả PR phải có:
    - **Làm gì:** 2-3 dòng tóm tắt.
    - **Test thế nào:** lệnh đã chạy, đã thử tay trên emulator chưa.
    - Link plan/spec liên quan (nếu có).
-3. Gắn ít nhất **1 người khác review**. Người review: đọc diff, chạy thử
-   nếu nghi ngờ, comment thẳng thắn — approve rồi mới merge.
+3. Người review là **chủ repo (binh0601)**: đọc diff, chạy thử nếu nghi ngờ,
+   comment thẳng thắn — approve rồi mới merge. Không tự merge PR của mình
+   (trừ chủ repo).
 4. Merge bằng **Squash and merge** (lịch sử main gọn, 1 PR = 1 commit).
 5. Merge xong **xóa branch** trên GitHub.
 
-## Khi branch bị tụt so với main
+## Khi branch bị tụt so với dev
 
 Người khác merge PR trước bạn → branch của bạn cũ:
 
 ```bash
 git checkout feat/ten-tinh-nang
-git pull origin main        # keo main moi nhat vao branch minh
+git pull origin dev         # keo dev moi nhat vao branch minh
 # tu xu ly conflict neu co, chay lai flutter test, roi push
 ```
 
@@ -90,7 +105,7 @@ Tự xử lý conflict trong branch của mình **trước khi** nhờ review.
 
 ## Cấm tuyệt đối
 
-- Push / force-push thẳng lên `main`.
+- Push / force-push thẳng lên `main` hoặc `dev`.
 - Commit: `.claude/`, `android/local.properties`, keystore (`*.jks`,
   `key.properties`), **API key** (Groq, Firebase secret), file build output.
   Đã có `.gitignore` — đừng bao giờ `git add -f`.
@@ -100,10 +115,10 @@ Tự xử lý conflict trong branch của mình **trước khi** nhờ review.
 ## Tóm tắt lệnh nhanh
 
 ```bash
-git checkout main && git pull                  # 1. cap nhat
+git checkout dev && git pull                   # 1. cap nhat
 git checkout -b feat/ten-tinh-nang             # 2. tao branch
 # ... code + commit nho ...
 flutter analyze && flutter test                # 3. kiem tra
-git push -u origin feat/ten-tinh-nang          # 4. push
-# 5. mo PR tren GitHub -> nho review -> squash merge -> xoa branch
+git push -u origin feat/ten-tinh-nang          # 4. push (fork: push len fork)
+# 5. mo PR vao dev -> chu repo review -> squash merge -> xoa branch
 ```
