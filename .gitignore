@@ -46,3 +46,6 @@ app.*.map.json
 
 # Claude Code local settings
 .claude/
+
+# Firebase config — KHONG commit, xin file tu truong nhom roi dat vao android/app/
+android/app/google-services.json
