@@ -54,10 +54,36 @@ flutter build apk --debug      # Build APK debug
 - Nguyên tắc: KISS, YAGNI — không thêm abstraction/config không cần thiết.
 - Sửa logic trong `lib/logic/` thì phải thêm/cập nhật test tương ứng trong `test/`.
 
-## Git
+## Git Flow (bắt buộc với cả người và AI tool)
 
-- Commit theo conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `chore:`.
-- Chạy `flutter test` pass hết rồi mới push. Không skip/xóa test để cho build xanh.
-- **Không commit:** `.claude/`, `android/local.properties`, keystore (`*.jks`, `key.properties`),
-  file build output — đã có trong `.gitignore`, đừng force add.
-- Làm việc nhóm: tạo branch riêng theo tính năng (`feat/ten-tinh-nang`), mở PR vào `main`.
+**Nguyên tắc:** `main` luôn ổn định — build được, `flutter test` pass. **Cấm push
+thẳng lên `main`**; mọi thay đổi đi qua branch + Pull Request.
+
+### Quy trình làm một tính năng / sửa lỗi
+
+1. Cập nhật main rồi tạo branch từ đó:
+   ```bash
+   git checkout main && git pull
+   git checkout -b feat/ten-tinh-nang    # hoặc fix/..., docs/..., refactor/...
+   ```
+2. Code + commit trên branch đó. Commit nhỏ, tập trung, theo conventional
+   commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`.
+3. Trước khi push: `flutter analyze` sạch và `flutter test` pass hết.
+   Không skip/xóa test để cho build xanh.
+4. Push branch, mở PR vào `main`. Mô tả PR ghi rõ: làm gì, test thế nào.
+5. Ít nhất 1 người khác review và approve rồi mới merge. Merge kiểu
+   **Squash and merge** cho lịch sử main gọn. Merge xong xóa branch.
+6. Branch bị tụt so với main → `git pull origin main` vào branch của mình
+   và tự xử lý conflict trước khi nhờ review.
+
+### Đặt tên branch
+
+- `feat/wallet-rollover`, `fix/login-crash`, `docs/update-readme`...
+- Chữ thường, nối bằng `-`, mô tả được nội dung, tiếng Anh.
+
+### Cấm
+
+- Force-push lên `main` (branch của mình thì được nếu chưa ai review).
+- Commit: `.claude/`, `android/local.properties`, keystore (`*.jks`,
+  `key.properties`), API key (Groq/Firebase secret), file build output.
+- Commit code đang hỏng ("WIP không compile") lên branch chung.
