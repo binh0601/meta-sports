@@ -77,14 +77,17 @@ disclaimer nói rõ điều này. Không có đường nào cho người chơi t
   template, seed theo `match.id` (tất định — demo ổn định). Nội dung: phong độ,
   đối đầu, kết luận nghiêng đội nào + % (từ `expertHomePct`), disclaimer.
 - **`lib/services/ai_analysis_service.dart`** (MỚI): đọc key
-  `String.fromEnvironment('GEMINI_API_KEY')` (truyền qua `--dart-define`,
-  không hardcode). Không key → trả bản local ngay. Có key → gọi Gemini REST
-  (timeout ~8s) với dữ liệu insights; lỗi/timeout → fallback bản local, không
-  hiện lỗi. Cache theo `match.id` trong phiên.
+  `String.fromEnvironment('GROQ_API_KEY')` (truyền qua `--dart-define`,
+  không hardcode). Không key → trả bản local ngay. Có key → gọi Groq
+  (chuẩn OpenAI: `POST https://api.groq.com/openai/v1/chat/completions`,
+  model `llama-3.3-70b-versatile`, timeout ~8s) với dữ liệu insights trong
+  prompt; lỗi/timeout/hết quota → fallback bản local, không hiện lỗi.
+  Cache theo `match.id` trong phiên. (User chọn Groq thay Gemini vì
+  Gemini free tier giới hạn.)
 - **`lib/screens/match_detail_screen.dart`** (SỬA): thêm card "🤖 AI nhận
   định": nút Phân tích → loading → đoạn văn + thanh % nghiêng đội + badge
-  nguồn ("AI nội bộ" / "Gemini").
-- Dependency mới: `http` (chỉ dùng cho Gemini REST).
+  nguồn ("AI nội bộ" / "Groq AI").
+- Dependency mới: `http` (chỉ dùng cho Groq REST).
 
 ## 3. Banner khuyến mãi
 
