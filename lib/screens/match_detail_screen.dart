@@ -4,6 +4,7 @@ import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../logic/match_insights.dart';
 import '../theme/brand_colors.dart';
+import '../widgets/ai_analysis_card.dart';
 import '../widgets/match_card.dart' show OddsSelectButton;
 import '../widgets/stat_card.dart';
 
@@ -59,6 +60,8 @@ class MatchDetailScreen extends StatelessWidget {
                       leftLabel: '${ins.expertHomePct}% ${match.home}',
                       rightLabel:
                           '${match.away} ${100 - ins.expertHomePct}%'),
+                  const SectionTitle('AI nhận định'),
+                  AiAnalysisCard(match: match),
                   const SectionTitle('Phong độ 5 trận gần nhất'),
                   _formRow(context, match.home, match.flagHome, ins.formHome),
                   const SizedBox(height: 8),
