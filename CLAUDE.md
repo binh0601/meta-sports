@@ -37,7 +37,9 @@ flutter build apk --debug      # Build APK debug
 
 ## Firebase
 
-- `android/app/google-services.json` đã có trong repo — Firebase tự kích hoạt khi build.
+- `android/app/google-services.json` **KHÔNG có trong repo** (repo public) —
+  xin file từ trưởng nhóm (binh0601) qua chat nhóm rồi đặt vào `android/app/`.
+  Có file thì Firebase tự kích hoạt khi build.
 - App vẫn build và chạy được ở **chế độ local** nếu thiếu file này (xem
   `android/app/build.gradle.kts` và `lib/services/firebase_bootstrap.dart`).
 - Tài khoản test bypass Firebase: `admin` / `123456` → vào dashboard nhà cái.
