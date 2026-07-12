@@ -37,7 +37,9 @@ class SportsbookScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 const Text('MEGA SPORTS',
                     style: TextStyle(
-                        fontWeight: FontWeight.w800, letterSpacing: 2)),
+                        fontFamily: kDisplayFont,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2)),
                 const SizedBox(width: 8),
                 Container(
                   padding:
@@ -102,6 +104,7 @@ class SportsbookScreen extends StatelessWidget {
           AnimatedMoneyText(
             value: g.balance,
             style: const TextStyle(
+              fontFamily: kDisplayFont,
               fontWeight: FontWeight.w800,
               fontSize: 16,
               color: kGold,

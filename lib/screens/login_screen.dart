@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../logic/auth_state.dart';
+import '../theme/brand_colors.dart';
 import '../widgets/brand_crest.dart';
 import '../widgets/pitch_background.dart';
 import 'admin_dashboard_screen.dart';
@@ -79,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   const Text('MEGA SPORTS',
                       style: TextStyle(
+                        fontFamily: kDisplayFont,
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 6,

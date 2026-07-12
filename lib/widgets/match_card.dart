@@ -225,6 +225,7 @@ class OddsSelectButton extends StatelessWidget {
                     ? '@${odds.toStringAsFixed(2)} • ĐÃ ĐẶT'
                     : '@${odds.toStringAsFixed(2)}',
                 style: TextStyle(
+                  fontFamily: kDisplayFont,
                   fontSize: placed && !selected ? 13 : 16,
                   fontWeight: FontWeight.w800,
                   color: selected || placed ? kGold : scheme.primary,

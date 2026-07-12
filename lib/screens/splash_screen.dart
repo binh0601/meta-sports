@@ -116,7 +116,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: const Text(
                             'MEGA SPORTS',
                             style: TextStyle(
-                              fontFamily: 'RussoOne',
+                              fontFamily: kDisplayFont,
                               fontSize: 34,
                               letterSpacing: 4,
                               color: Colors.white,

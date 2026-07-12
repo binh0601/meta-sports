@@ -31,6 +31,7 @@ class HouseEdgeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        fontFamily: 'ChakraPetch',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF3B82F6), // xanh royal kieu app the thao
           brightness: Brightness.dark,

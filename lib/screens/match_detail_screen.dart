@@ -165,6 +165,7 @@ class MatchDetailScreen extends StatelessWidget {
                         ? '${match.homeGoals} - ${match.awayGoals}'
                         : match.kickoff,
                     style: const TextStyle(
+                        fontFamily: kDisplayFont,
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: kGold),
