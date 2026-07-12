@@ -28,3 +28,13 @@ flutter:
   assets:
     - assets/flags/
     - assets/images/
+    - assets/fonts/
+  fonts:
+    - family: RussoOne
+      fonts:
+        - asset: assets/fonts/RussoOne-Regular.ttf
+    - family: ChakraPetch
+      fonts:
+        - asset: assets/fonts/ChakraPetch-Regular.ttf
+        - asset: assets/fonts/ChakraPetch-Bold.ttf
+          weight: 700
