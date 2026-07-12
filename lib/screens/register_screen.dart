@@ -5,7 +5,7 @@ import '../widgets/pitch_background.dart';
 import 'player_home_screen.dart';
 
 /// Dang ky tai khoan nguoi choi moi qua Firebase (email/password).
-/// Thanh cong -> vao thang san keo voi vi 10 trieu.
+/// Thanh cong -> vao thang san keo voi vi 500k.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -86,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: Colors.white)),
-                  Text('Nhận ngay ví 10 triệu tiền ảo',
+                  Text('Nhận ngay ví 500k tiền ảo',
                       style: TextStyle(
                           fontSize: 12, color: scheme.onSurfaceVariant)),
                   const SizedBox(height: 20),

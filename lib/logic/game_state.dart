@@ -7,7 +7,7 @@ import '../services/notification_service.dart';
 import '../services/player_repository.dart';
 import 'betting_math.dart';
 import 'football_market.dart';
-import 'wallet_rules.dart';   // them vao cum import logic
+import 'wallet_rules.dart';
 
 /// Trang thai san keo: vi tien ao, phieu cuoc, lich su.
 /// Nguoi choi Firebase: vi + lich su dong bo Firestore (fire-and-forget).
