@@ -122,3 +122,55 @@ class _SpinningBallIconState extends State<SpinningBallIcon>
     );
   }
 }
+
+/// Cham nho nhap nhay (scale 1 -> 1.35 + mo dan) canh nhan "MO CUOC" —
+/// bao hieu tran chua da. disableAnimations (vd. test) -> cham tinh.
+class PulseDot extends StatefulWidget {
+  final Color color;
+  const PulseDot(this.color, {super.key});
+
+  @override
+  State<PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<PulseDot>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _ctrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ctrl == null && !MediaQuery.of(context).disableAnimations) {
+      _ctrl = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 1200))
+        ..repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  Widget _dot(double t) => Transform.scale(
+        scale: 1 + t * 0.35,
+        child: Opacity(
+          opacity: 1 - t * 0.5,
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration:
+                BoxDecoration(color: widget.color, shape: BoxShape.circle),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) return _dot(0);
+    return AnimatedBuilder(
+        animation: ctrl, builder: (_, _) => _dot(ctrl.value));
+  }
+}

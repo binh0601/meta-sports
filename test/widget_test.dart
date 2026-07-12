@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:house_edge_demo/logic/auth_state.dart';
+import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
 import 'package:house_edge_demo/main.dart';
 
@@ -106,5 +107,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2200));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('ĐĂNG NHẬP'), findsOneWidget); // sang login
+  });
+
+  testWidgets('doi giai sang World Cup doi label va doi bong', (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('WORLD CUP 2026').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(gameState.league, League.worldCup);
+    // gameState la global — tra ve giai cu de khong anh huong test sau.
+    gameState.switchLeague(League.asianCup);
   });
 }

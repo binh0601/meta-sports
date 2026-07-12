@@ -71,7 +71,7 @@ class MatchCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: Image.asset(flag, width: 30, height: 20, fit: BoxFit.cover),
+        child: Image.asset(flag, width: 34, height: 23, fit: BoxFit.cover),
       ),
     );
     final label = Expanded(
@@ -117,14 +117,28 @@ class MatchCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            match.played ? 'KẾT THÚC' : 'HÔM NAY',
-            style: TextStyle(
-              fontSize: 9,
-              letterSpacing: 1,
-              color: match.played ? Colors.lightGreen : scheme.outline,
-            ),
-          ),
+          match.played
+              ? const Text(
+                  'KẾT THÚC',
+                  style: TextStyle(
+                      fontSize: 9,
+                      letterSpacing: 1,
+                      color: Colors.lightGreen),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    PulseDot(Colors.lightGreen),
+                    SizedBox(width: 4),
+                    Text(
+                      'MỞ CƯỢC',
+                      style: TextStyle(
+                          fontSize: 9,
+                          letterSpacing: 1,
+                          color: Colors.lightGreen),
+                    ),
+                  ],
+                ),
         ],
       ),
     );
@@ -196,6 +210,14 @@ class OddsSelectButton extends StatelessWidget {
             color: selected || placed ? kGold : scheme.outlineVariant,
             width: selected || placed ? 1.4 : 1,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                      color: kGold.withValues(alpha: .45),
+                      blurRadius: 14,
+                      spreadRadius: 1),
+                ]
+              : null,
         ),
         child: Column(
           children: [

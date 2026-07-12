@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/bet_slip_drawer.dart';
@@ -7,6 +8,7 @@ import '../widgets/bet_slip_panel.dart';
 import '../widgets/brand_crest.dart';
 import '../widgets/gold_rain.dart';
 import '../widgets/hero_banner.dart';
+import '../widgets/league_switcher.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
 import '../widgets/promo_banner_carousel.dart';
@@ -48,8 +50,11 @@ class SportsbookScreen extends StatelessWidget {
                     border: Border.all(color: kGold),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text('CUP CHÂU Á',
-                      style: TextStyle(fontSize: 9, color: kGold)),
+                  child: Text(
+                      g.league == League.worldCup
+                          ? 'WORLD CUP'
+                          : 'CUP CHÂU Á',
+                      style: const TextStyle(fontSize: 9, color: kGold)),
                 ),
               ],
             ),
@@ -65,9 +70,16 @@ class SportsbookScreen extends StatelessWidget {
                       children: [
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
-                          child: PromoBannerCarousel(),
+                          child: Column(
+                            children: [
+                              LeagueSwitcher(),
+                              SizedBox(height: 8),
+                              PromoBannerCarousel(),
+                            ],
+                          ),
                         ),
-                        HeroBanner(roundNumber: g.roundNumber),
+                        HeroBanner(
+                            roundNumber: g.roundNumber, league: g.league),
                         for (var i = 0; i < g.matches.length; i++)
                           MatchCard(
                             key: ValueKey(g.matches[i].id),

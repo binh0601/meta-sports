@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../logic/football_market.dart';
 import '../theme/brand_colors.dart';
 
 /// Banner anh cau thu that tren dau san keo: anh + phu gradient toi ben
-/// trai de chu noi, nhan giai dau + vong hien tai.
+/// trai de chu noi, nhan giai dau + vong hien tai. Anh va nhan doi theo
+/// giai dang chon; nen zoom cham kieu Ken Burns cho song dong.
 class HeroBanner extends StatelessWidget {
   final int roundNumber;
-  const HeroBanner({super.key, required this.roundNumber});
+  final League league;
+  const HeroBanner(
+      {super.key, required this.roundNumber, required this.league});
 
   @override
   Widget build(BuildContext context) {
+    final image = league == League.worldCup
+        ? 'assets/images/action_worldcup.jpg'
+        : 'assets/images/player_volley.jpg';
     return Container(
       height: 132,
       margin: const EdgeInsets.only(bottom: 12),
@@ -18,8 +25,7 @@ class HeroBanner extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset('assets/images/player_volley.jpg',
-                fit: BoxFit.cover, alignment: const Alignment(0, -.4)),
+            _KenBurns(image: image, alignment: const Alignment(0, -.4)),
             // Phu toi tu trai sang de text doc duoc tren anh
             const DecoratedBox(
               decoration: BoxDecoration(
@@ -43,8 +49,8 @@ class HeroBanner extends StatelessWidget {
                       color: kGold,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text('CUP CHÂU Á 2026',
-                        style: TextStyle(
+                    child: Text(league.label,
+                        style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF1C1917))),
@@ -67,5 +73,56 @@ class HeroBanner extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Anh nen zoom cham (Ken Burns) 1.0 -> 1.08, lap vo han dao chieu, cho
+/// hero banner song dong. disableAnimations (vd. test) -> anh tinh.
+class _KenBurns extends StatefulWidget {
+  final String image;
+  final Alignment alignment;
+  const _KenBurns({required this.image, required this.alignment});
+
+  @override
+  State<_KenBurns> createState() => _KenBurnsState();
+}
+
+class _KenBurnsState extends State<_KenBurns>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _ctrl;
+  Animation<double>? _scale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ctrl == null && !MediaQuery.of(context).disableAnimations) {
+      final ctrl = AnimationController(
+          vsync: this, duration: const Duration(seconds: 9))
+        ..repeat(reverse: true);
+      _ctrl = ctrl;
+      _scale = Tween(begin: 1.0, end: 1.08)
+          .animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOut));
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  Widget _image(double scale) => Transform.scale(
+        scale: scale,
+        alignment: widget.alignment,
+        child: Image.asset(widget.image,
+            fit: BoxFit.cover, alignment: widget.alignment),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = _scale;
+    if (scale == null) return _image(1.0);
+    return AnimatedBuilder(
+        animation: scale, builder: (_, _) => _image(scale.value));
   }
 }
