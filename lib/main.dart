@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'logic/auth_state.dart';
 import 'screens/login_screen.dart';
 import 'screens/player_home_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/firebase_bootstrap.dart';
 import 'services/notification_service.dart';
 
@@ -19,7 +20,9 @@ Future<void> main() async {
 /// 2 role: nguoi choi (Firebase Auth) va admin nha cai (dang nhap cung).
 class HouseEdgeApp extends StatelessWidget {
   final bool startLoggedIn;
-  const HouseEdgeApp({super.key, this.startLoggedIn = false});
+  final bool showSplash;
+  const HouseEdgeApp(
+      {super.key, this.startLoggedIn = false, this.showSplash = true});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +47,14 @@ class HouseEdgeApp extends StatelessWidget {
           TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
         }),
       ),
-      home: startLoggedIn ? const PlayerHomeScreen() : const LoginScreen(),
+      home: showSplash
+          ? SplashScreen(
+              next: startLoggedIn
+                  ? const PlayerHomeScreen()
+                  : const LoginScreen())
+          : startLoggedIn
+              ? const PlayerHomeScreen()
+              : const LoginScreen(),
     );
   }
 }
