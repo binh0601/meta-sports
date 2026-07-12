@@ -9,6 +9,7 @@ import '../widgets/gold_rain.dart';
 import '../widgets/hero_banner.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
+import '../widgets/promo_banner_carousel.dart';
 
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
@@ -60,6 +61,10 @@ class SportsbookScreen extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                       children: [
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: PromoBannerCarousel(),
+                        ),
                         HeroBanner(roundNumber: g.roundNumber),
                         for (var i = 0; i < g.matches.length; i++)
                           MatchCard(
