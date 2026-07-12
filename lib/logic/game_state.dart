@@ -23,6 +23,7 @@ class GameState extends ChangeNotifier {
   List<FootballMatch> matches = [];
   final WalletRules wallet = WalletRules(totalFunded: startBalance);
   bool isDemoWallet = false; // true khi dang nhap tai khoan demo/123456
+  League league = League.asianCup;
 
   final List<BetSelection> slip = []; // phieu dang chon
   double stake = 100;
@@ -35,7 +36,7 @@ class GameState extends ChangeNotifier {
   bool syncing = false; // dang tai du lieu cloud
 
   GameState() {
-    matches = generateRound(_rng, 1);
+    matches = generateRound(_rng, 1, league: league);
   }
 
   // ---- Dong bo Firestore ----
@@ -65,7 +66,7 @@ class GameState extends ChangeNotifier {
     pending.clear();
     lastResults = [];
     roundPlayed = false;
-    matches = generateRound(_rng, roundNumber * 100);
+    matches = generateRound(_rng, roundNumber * 100, league: league);
     syncing = false;
     notifyListeners();
   }
@@ -197,12 +198,26 @@ class GameState extends ChangeNotifier {
 
   void newRound() {
     roundNumber++;
-    matches = generateRound(_rng, roundNumber * 100);
+    matches = generateRound(_rng, roundNumber * 100, league: league);
     roundPlayed = false;
     slip.clear();
     lastResults = [];
     _saveStateToCloud();
     notifyListeners();
+  }
+
+  /// Doi giai dau. Tra ve false khi con phieu cho ket qua (tien dang nam
+  /// trong cuoc — khong duoc doi san).
+  bool switchLeague(League l) {
+    if (pending.isNotEmpty) return false;
+    if (l == league) return true;
+    league = l;
+    matches = generateRound(_rng, roundNumber * 100, league: league);
+    slip.clear();
+    lastResults = [];
+    roundPlayed = false;
+    notifyListeners();
+    return true;
   }
 
   /// Choi lai tu dau: vi ve 500k (tai khoan demo: 10 trieu), danh dau
@@ -217,7 +232,7 @@ class GameState extends ChangeNotifier {
     wallet.reset(balance);
     roundNumber = 1;
     roundPlayed = false;
-    matches = generateRound(_rng, 1);
+    matches = generateRound(_rng, 1, league: league);
     slip.clear();
     pending.clear();
     settled.clear();
