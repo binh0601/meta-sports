@@ -6,6 +6,7 @@ import '../theme/brand_colors.dart';
 import '../widgets/bet_slip_drawer.dart';
 import '../widgets/bet_slip_panel.dart';
 import '../widgets/brand_crest.dart';
+import '../widgets/coin_burst.dart';
 import '../widgets/gold_rain.dart';
 import '../widgets/hero_banner.dart';
 import '../widgets/league_switcher.dart';
@@ -109,42 +110,44 @@ class SportsbookScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(gradient: kBrandGradient),
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-      child: Row(
-        children: [
-          const Icon(Icons.account_balance_wallet, size: 18, color: kGold),
-          const SizedBox(width: 6),
-          AnimatedMoneyText(
-            value: g.balance,
-            style: const TextStyle(
-              fontFamily: kDisplayFont,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: kGold,
+      child: CoinBurst(
+        child: Row(
+          children: [
+            const Icon(Icons.account_balance_wallet, size: 18, color: kGold),
+            const SizedBox(width: 6),
+            AnimatedMoneyText(
+              value: g.balance,
+              style: const TextStyle(
+                fontFamily: kDisplayFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: kGold,
+              ),
             ),
-          ),
-          const Spacer(),
-          // Bam chip -> mo sidebar phieu cuoc (can Builder de lay context
-          // nam duoi Scaffold)
-          Builder(
-            builder: (ctx) => GestureDetector(
-              onTap: () => Scaffold.of(ctx).openEndDrawer(),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  g.pending.isEmpty
-                      ? 'Vòng ${g.roundNumber}'
-                      : 'Vòng ${g.roundNumber} • ${g.pending.length} phiếu chờ',
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
+            const Spacer(),
+            // Bam chip -> mo sidebar phieu cuoc (can Builder de lay context
+            // nam duoi Scaffold)
+            Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    g.pending.isEmpty
+                        ? 'Vòng ${g.roundNumber}'
+                        : 'Vòng ${g.roundNumber} • ${g.pending.length} phiếu chờ',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
