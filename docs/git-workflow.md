@@ -20,9 +20,13 @@ feature branch ──PR──▶ dev ──PR (theo milestone)──▶ main
 - **`dev`**: nhánh tích hợp hằng ngày. PR tính năng trỏ vào đây.
 - **Feature branch**: nơi duy nhất được push trực tiếp. Cả nhóm là
   collaborator của repo chung — push branch của mình lên repo, KHÔNG cần fork.
-- **Review**: mọi PR do **chủ repo (binh0601) review và merge**. GitHub free
-  không khóa cứng được repo private — quy tắc này chạy bằng kỷ luật nhóm:
-  thấy ai push thẳng main/dev thì nhắc nhau trong nhóm chat.
+- **Review**: mọi PR do **chủ repo (binh0601) review và merge** — quy tắc này
+  được GitHub khóa cứng bằng branch protection + CODEOWNERS (`.github/CODEOWNERS`):
+  push thẳng vào `main`/`dev` sẽ bị từ chối, PR chưa có approve của chủ repo
+  thì nút merge không bấm được.
+- **Firebase**: `android/app/google-services.json` KHÔNG có trong repo
+  (repo public) — xin file từ trưởng nhóm qua chat nhóm, đặt vào `android/app/`.
+  Tuyệt đối không commit file này.
 
 ## Trước khi code — checklist 4 bước
 
