@@ -7,18 +7,22 @@ import '../services/notification_service.dart';
 import '../services/player_repository.dart';
 import 'betting_math.dart';
 import 'football_market.dart';
+import 'wallet_rules.dart';   // them vao cum import logic
 
 /// Trang thai san keo: vi tien ao, phieu cuoc, lich su.
 /// Nguoi choi Firebase: vi + lich su dong bo Firestore (fire-and-forget).
 /// Khong attachUser (admin/test): hoat dong thuan local nhu cu.
 class GameState extends ChangeNotifier {
-  static const double startBalance = 10000; // 10 trieu (don vi k)
+  static const double startBalance = 500; // 500k cap cho tai khoan moi
+  static const double demoBalance = 10000; // 10 trieu — rieng tai khoan demo
   final Random _rng = Random();
 
   double balance = startBalance;
   int roundNumber = 1;
   bool roundPlayed = false;
   List<FootballMatch> matches = [];
+  final WalletRules wallet = WalletRules(totalFunded: startBalance);
+  bool isDemoWallet = false; // true khi dang nhap tai khoan demo/123456
 
   final List<BetSelection> slip = []; // phieu dang chon
   double stake = 100;
@@ -47,6 +51,9 @@ class GameState extends ChangeNotifier {
         await PlayerRepository.instance.loadRecentBets(user.uid);
     balance = profile.balance;
     roundNumber = profile.roundNumber;
+    isDemoWallet = false;
+    wallet.totalFunded = profile.totalFunded;
+    wallet.totalWagered = profile.totalWagered;
     settled
       ..clear()
       ..addAll(history.map((h) => h.slip));
@@ -63,9 +70,16 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Dang xuat: thoi dong bo, dua state local ve ban dau (KHONG dong cloud).
+  /// Dang nhap tai khoan demo (khong Firebase): vi 10 trieu, thuan local.
+  void attachDemo() {
+    _uid = null;
+    isDemoWallet = true;
+    _resetLocal();
+  }
+
   void detachUser() {
     _uid = null;
+    isDemoWallet = false;
     _resetLocal();
   }
 
@@ -73,7 +87,11 @@ class GameState extends ChangeNotifier {
     final uid = _uid;
     if (uid == null) return;
     PlayerRepository.instance.saveState(uid,
-        balance: balance, roundNumber: roundNumber, markReset: markReset);
+        balance: balance,
+        roundNumber: roundNumber,
+        totalFunded: wallet.totalFunded,
+        totalWagered: wallet.totalWagered,
+        markReset: markReset);
   }
 
   // ---- Gameplay ----
@@ -111,6 +129,7 @@ class GameState extends ChangeNotifier {
   void placeBet() {
     if (!canPlaceBet) return;
     balance -= stake;
+    wallet.recordWager(stake);
     pending.add(
         BetSlip(selections: [...slip], stake: stake, round: roundNumber));
     slip.clear();
@@ -152,6 +171,30 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Nap tien gia lap: cong vi ngay; moi dong nap keo theo 5x rollover.
+  void deposit(double amount) {
+    if (amount <= 0) return;
+    balance += amount;
+    wallet.deposit(amount);
+    _saveStateToCloud();
+    notifyListeners();
+  }
+
+  /// Rut toan bo (gia lap). Tra ve so tien rut duoc, 0 neu chua du dieu kien.
+  double withdrawAll() {
+    if (!wallet.canWithdraw(
+        balance: balance, hasPending: pending.isNotEmpty)) {
+      return 0;
+    }
+    final amount = balance;
+    balance = 0;
+    wallet.resetAfterWithdraw();
+    balanceHistory.add(balance);
+    _saveStateToCloud();
+    notifyListeners();
+    return amount;
+  }
+
   void newRound() {
     roundNumber++;
     matches = generateRound(_rng, roundNumber * 100);
@@ -170,7 +213,8 @@ class GameState extends ChangeNotifier {
   }
 
   void _resetLocal() {
-    balance = startBalance;
+    balance = isDemoWallet ? demoBalance : startBalance;
+    wallet.reset(balance);
     roundNumber = 1;
     roundPlayed = false;
     matches = generateRound(_rng, 1);
@@ -180,7 +224,7 @@ class GameState extends ChangeNotifier {
     lastResults = [];
     balanceHistory
       ..clear()
-      ..add(startBalance);
+      ..add(balance);
     notifyListeners();
   }
 

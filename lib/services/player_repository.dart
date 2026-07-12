@@ -18,9 +18,14 @@ class PlayerRepository {
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
       _db.collection('users').doc(uid);
 
-  /// Tra ve (balance, roundNumber); user moi duoc tao voi [defaultBalance].
-  Future<({double balance, int roundNumber})> loadOrCreateProfile(
-      User user, double defaultBalance) async {
+  /// Tra ve profile vi; user moi duoc tao voi [defaultBalance].
+  /// Tai khoan cu thieu field vi -> mac dinh totalFunded=500, wagered=0.
+  Future<({
+    double balance,
+    int roundNumber,
+    double totalFunded,
+    double totalWagered,
+  })> loadOrCreateProfile(User user, double defaultBalance) async {
     final ref = _userDoc(user.uid);
     final snap = await ref.get();
     if (!snap.exists) {
@@ -29,28 +34,39 @@ class PlayerRepository {
         'displayName': user.displayName ?? '',
         'balance': defaultBalance,
         'roundNumber': 1,
+        'totalFunded': defaultBalance,
+        'totalWagered': 0.0,
         'createdAt': FieldValue.serverTimestamp(),
       });
-      return (balance: defaultBalance, roundNumber: 1);
+      return (
+        balance: defaultBalance,
+        roundNumber: 1,
+        totalFunded: defaultBalance,
+        totalWagered: 0.0,
+      );
     }
     final d = snap.data()!;
     return (
       balance: (d['balance'] as num?)?.toDouble() ?? defaultBalance,
       roundNumber: (d['roundNumber'] as num?)?.toInt() ?? 1,
+      totalFunded: (d['totalFunded'] as num?)?.toDouble() ?? defaultBalance,
+      totalWagered: (d['totalWagered'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
-  /// Ghi so du + vong hien tai; [markReset] danh dau choi lai tu dau
-  /// (lich su cu se bi loc bo khi khoi phuc).
   Future<void> saveState(String uid,
       {required double balance,
       required int roundNumber,
+      required double totalFunded,
+      required double totalWagered,
       bool markReset = false}) async {
     if (!firebaseReady) return;
     try {
       await _userDoc(uid).set({
         'balance': balance,
         'roundNumber': roundNumber,
+        'totalFunded': totalFunded,
+        'totalWagered': totalWagered,
         if (markReset) 'resetAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
