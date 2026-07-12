@@ -1,0 +1,138 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../logic/auth_state.dart';
+import '../screens/wallet_screen.dart';
+import '../theme/brand_colors.dart';
+
+/// Bang ron khuyen mai gia — tu cuon 4s/banner cho giong app thuong mai.
+/// Noi dung la moi chai khuyen mai kieu nha cai (dung chu de giao duc).
+/// Bam banner -> mo man vi (tru tai khoan demo).
+class PromoBannerCarousel extends StatefulWidget {
+  const PromoBannerCarousel({super.key});
+
+  @override
+  State<PromoBannerCarousel> createState() => _PromoBannerCarouselState();
+}
+
+class _Promo {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> colors;
+  const _Promo(this.title, this.subtitle, this.icon, this.colors);
+}
+
+const List<_Promo> _promos = [
+  _Promo('NẠP LẦN ĐẦU +100%', 'Nạp 500k nhận ngay 1 triệu trong ví',
+      Icons.bolt, [Color(0xFFB45309), Color(0xFF78350F)]),
+  _Promo('CƯỢC XÂU THƯỞNG KHỦNG', 'Xâu 5 kèo trở lên — thưởng thêm 30%',
+      Icons.link, [Color(0xFF1D4ED8), Color(0xFF312E81)]),
+  _Promo('SIÊU KÈO CUỐI TUẦN', 'Odds tăng cực mạnh cho trận cầu tâm điểm',
+      Icons.local_fire_department, [Color(0xFFB91C1C), Color(0xFF7F1D1D)]),
+  _Promo('MỜI BẠN NHẬN 50K', 'Giới thiệu bạn bè — cả hai cùng có thưởng',
+      Icons.card_giftcard, [Color(0xFF047857), Color(0xFF064E3B)]),
+];
+
+class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
+  final _controller = PageController();
+  Timer? _timer;
+  int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_controller.hasClients) return;
+      final next = (_page + 1) % _promos.length;
+      _controller.animateToPage(next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _open() {
+    if (authState.isDemo) return; // demo khong co nap/rut
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const WalletScreen()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 96,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: _promos.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (context, i) {
+              final p = _promos[i];
+              return GestureDetector(
+                onTap: _open,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(colors: p.colors),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(p.icon, size: 34, color: kGold),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(p.title,
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: .5)),
+                            const SizedBox(height: 3),
+                            Text(p.subtitle,
+                                style: const TextStyle(
+                                    fontSize: 11, color: Colors.white70)),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: Colors.white54),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < _promos.length; i++)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: i == _page ? 14 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: i == _page ? kGold : Colors.white24,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
