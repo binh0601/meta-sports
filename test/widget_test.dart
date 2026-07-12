@@ -82,4 +82,21 @@ void main() {
     expect(find.text('Sai mật khẩu demo.'), findsOneWidget);
     expect(authState.isLoggedIn, false);
   });
+
+  testWidgets('tai khoan demo khong thay nut Nap/Rut o tab Toi',
+      (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp());
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    // San keo co SpinningBallIcon quay vo han -> pumpAndSettle khong bao gio
+    // dung; pump theo thoi luong co dinh de qua het chuyen man + entrance.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Tôi'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Nạp / Rút tiền'), findsNothing);
+    expect(find.text('Chơi lại từ đầu'), findsOneWidget);
+  });
 }

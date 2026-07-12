@@ -6,6 +6,7 @@ import '../logic/game_state.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/stat_card.dart';
 import 'login_screen.dart';
+import 'wallet_screen.dart';
 
 /// Tab "Toi": ho so nguoi choi, so du, thanh tich va dang xuat.
 class PlayerProfileScreen extends StatelessWidget {
@@ -107,11 +108,25 @@ class PlayerProfileScreen extends StatelessWidget {
                       ),
                     ]),
                     const SizedBox(height: 16),
+                    if (!authState.isDemo) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.account_balance_wallet),
+                          label: const Text('Nạp / Rút tiền'),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const WalletScreen()),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.tonalIcon(
                         icon: const Icon(Icons.restart_alt),
-                        label: const Text('Chơi lại từ đầu (ví về 10 triệu)'),
+                        label: const Text('Chơi lại từ đầu'),
                         onPressed: () => _confirmReset(context),
                       ),
                     ),
@@ -151,7 +166,9 @@ class PlayerProfileScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Chơi lại từ đầu?'),
-        content: const Text('Ví về 10 triệu, xóa toàn bộ lịch sử cược.'),
+        content: Text('Ví về ${fmtMoney(gameState.isDemoWallet
+            ? GameState.demoBalance
+            : GameState.startBalance)}, xóa toàn bộ lịch sử cược.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
