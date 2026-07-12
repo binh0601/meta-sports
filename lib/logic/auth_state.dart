@@ -10,6 +10,7 @@ enum UserRole { player, admin }
 class AuthState extends ChangeNotifier {
   UserRole? role;
   String username = '';
+  bool isDemo = false; // true khi dang nhap tai khoan thu demo/123456
 
   bool get isLoggedIn => role != null;
 
@@ -21,6 +22,15 @@ class AuthState extends ChangeNotifier {
       if (password != '123456') return 'Sai mật khẩu admin.';
       role = UserRole.admin;
       username = 'admin';
+      notifyListeners();
+      return null;
+    }
+    if (id.toLowerCase() == 'demo') {
+      if (password != '123456') return 'Sai mật khẩu demo.';
+      role = UserRole.player;
+      username = 'demo';
+      isDemo = true;
+      gameState.attachDemo();
       notifyListeners();
       return null;
     }
@@ -55,6 +65,7 @@ class AuthState extends ChangeNotifier {
   }
 
   void _onPlayerSignedIn({String? fallbackName}) {
+    isDemo = false;
     final user = AuthService.instance.currentUser;
     role = UserRole.player;
     username = (user?.displayName?.trim().isNotEmpty ?? false)
@@ -72,6 +83,7 @@ class AuthState extends ChangeNotifier {
     gameState.detachUser();
     role = null;
     username = '';
+    isDemo = false;
     notifyListeners();
   }
 }

@@ -57,7 +57,7 @@ class BetHistoryScreen extends StatelessWidget {
                                   i++)
                                 Offset(i.toDouble(), g.balanceHistory[i])
                             ],
-                            g.balance >= GameState.startBalance
+                            g.netProfit >= 0
                                 ? Colors.lightGreen
                                 : Colors.redAccent,
                             'Số dư',
