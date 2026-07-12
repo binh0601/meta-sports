@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../logic/ai_match_analysis.dart';
@@ -8,7 +9,7 @@ import '../logic/match_insights.dart';
 
 /// Phan tich tran bang AI. Co GROQ_API_KEY (--dart-define) -> goi Groq
 /// (API chuan OpenAI); khong key / loi / timeout -> tra ban local.
-/// Khong bao gio throw. Cache theo id tran trong phien.
+/// Khong bao gio throw. Cache theo tran (id + doi) trong phien.
 class AiAnalysisService {
   AiAnalysisService._();
   static final AiAnalysisService instance = AiAnalysisService._();
@@ -18,14 +19,15 @@ class AiAnalysisService {
       'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'llama-3.3-70b-versatile';
 
-  final Map<int, AiMatchAnalysis> _cache = {};
+  final Map<String, AiMatchAnalysis> _cache = {};
 
   Future<AiMatchAnalysis> analyze(FootballMatch m) async {
-    final cached = _cache[m.id];
+    final key = '${m.id}:${m.home}:${m.away}';
+    final cached = _cache[key];
     if (cached != null) return cached;
     final ins = MatchInsights.of(m);
     final local = buildLocalAnalysis(m, ins);
-    if (_apiKey.isEmpty) return _cache[m.id] = local;
+    if (_apiKey.isEmpty) return _cache[key] = local;
     try {
       final resp = await http
           .post(
@@ -55,16 +57,16 @@ class AiAnalysisService {
         final text = ((data['choices'] as List).first['message']['content']
                 as String)
             .trim();
-        return _cache[m.id] = AiMatchAnalysis(
+        return _cache[key] = AiMatchAnalysis(
           text: '$text\n\n$kAiDisclaimer',
           homeConfidencePct: ins.expertHomePct,
           source: 'groq',
         );
       }
     } catch (_) {
-      // roi ve ban local ben duoi
+      debugPrint('Groq analysis loi, dung ban noi bo');
     }
-    return _cache[m.id] = local;
+    return _cache[key] = local;
   }
 
   String _prompt(FootballMatch m, MatchInsights ins) {
