@@ -59,7 +59,7 @@ class GameState extends ChangeNotifier {
       ..addAll(history.map((h) => h.slip));
     balanceHistory
       ..clear()
-      ..add(history.isEmpty ? balance : startBalance)
+      ..add(history.isEmpty ? balance : wallet.totalFunded)
       ..addAll(history.map((h) => h.balanceAfter));
     slip.clear();
     pending.clear();
@@ -205,8 +205,8 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Choi lai tu dau: vi ve 10 trieu, danh dau reset tren cloud de
-  /// lich su cu khong bi khoi phuc lai.
+  /// Choi lai tu dau: vi ve 500k (tai khoan demo: 10 trieu), danh dau
+  /// reset tren cloud de lich su cu khong bi khoi phuc lai.
   void reset() {
     _resetLocal();
     _saveStateToCloud(markReset: true);
@@ -231,7 +231,8 @@ class GameState extends ChangeNotifier {
   // ---- Thong ke doi chieu voi ly thuyet (admin dung) ----
   int get betCount => settled.length;
   double get totalStaked => settled.fold(0.0, (s, b) => s + b.stake);
-  double get netProfit => balance - startBalance - pendingStake;
+  /// Lai/lo so voi tong tien duoc cap/nap (tru phieu dang cho ket qua).
+  double get netProfit => balance - wallet.totalFunded - pendingStake;
   double get pendingStake => pending.fold(0.0, (s, b) => s + b.stake);
 
   /// Ly thuyet du doan mat: tong (tien cuoc x bien nha cai theo so keo ghep).
