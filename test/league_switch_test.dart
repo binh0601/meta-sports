@@ -8,7 +8,8 @@ void main() {
   test('generateRound theo giai: world cup ra doi Au-My', () {
     final wc = generateRound(Random(1), 1, league: League.worldCup);
     final teams = wc.expand((m) => [m.home, m.away]).toSet();
-    expect(teams.contains('Brazil') || teams.contains('Đức'), true);
+    expect(teams.contains('Đức'), true);
+    expect(teams.contains('Brazil'), true);
     expect(teams.contains('Việt Nam'), false);
     expect(wc.length, 8);
   });

@@ -142,15 +142,15 @@ enum League { asianCup, worldCup }
 
 extension LeagueInfo on League {
   String get label =>
-      this == League.asianCup ? 'CUP CHAU A 2026' : 'WORLD CUP 2026';
+      this == League.asianCup ? 'CUP CHÂU Á 2026' : 'WORLD CUP 2026';
 }
 
 /// 16 doi Au-My cho World Cup — co tai tu flagcdn (Task 1).
 const List<(String, String)> _wcTeams = [
-  ('Duc', 'de'), ('Phap', 'fr'), ('Anh', 'gb-eng'), ('Tay Ban Nha', 'es'),
-  ('Y', 'it'), ('Bo Dao Nha', 'pt'), ('Ha Lan', 'nl'), ('Bi', 'be'),
-  ('Croatia', 'hr'), ('Dan Mach', 'dk'), ('Brazil', 'br'),
-  ('Argentina', 'ar'), ('Uruguay', 'uy'), ('My', 'us'),
+  ('Đức', 'de'), ('Pháp', 'fr'), ('Anh', 'gb-eng'), ('Tây Ban Nha', 'es'),
+  ('Ý', 'it'), ('Bồ Đào Nha', 'pt'), ('Hà Lan', 'nl'), ('Bỉ', 'be'),
+  ('Croatia', 'hr'), ('Đan Mạch', 'dk'), ('Brazil', 'br'),
+  ('Argentina', 'ar'), ('Uruguay', 'uy'), ('Mỹ', 'us'),
   ('Mexico', 'mx'), ('Morocco', 'ma'),
 ];
 
