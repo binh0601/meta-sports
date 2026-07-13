@@ -20,6 +20,15 @@ flutter run --dart-define=GROQ_API_KEY=<your-groq-api-key>
 ```
 Without the key, the app runs normally and uses fallback local analysis.
 
+### Tỷ số trực tiếp (tùy chọn)
+
+Màn "Trực tiếp" (icon TV trên sảnh) hiện tỷ số bóng đá thật qua API-Football:
+```bash
+flutter run --dart-define=FOOTBALL_API_KEY=<your-api-sports-key>
+```
+Không có key thì màn này chạy chế độ demo (một trận giả tự chạy phút + sự kiện).
+Chỉ để xem — không đặt cược trên trận thật.
+
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
