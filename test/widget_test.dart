@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:house_edge_demo/logic/auth_state.dart';
 import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
+import 'package:house_edge_demo/logic/handicap_settlement.dart';
 import 'package:house_edge_demo/main.dart';
+import 'package:house_edge_demo/widgets/bet_slip_panel.dart';
 import 'package:house_edge_demo/widgets/match_card.dart' show OddsSelectButton;
 
 void main() {
@@ -148,5 +150,36 @@ void main() {
     expect(gameState.slip.any((s) => s.market == MarketType.handicap), true);
     // gameState la global — don phieu de khong anh huong test sau.
     gameState.slip.clear();
+  });
+
+  testWidgets('nhan ket qua xien 2 chan (1 thang 1 thua) hien "Mất" khong "Ăn đủ"',
+      (tester) async {
+    // Xien 1x2: chan 0 THANG (status win) nhung chan 1 THUA -> ca phieu thua
+    // (won=false, payout 0). Nhan phai theo ket qua toan phieu, khong theo
+    // status cua chan dau tien.
+    final g = gameState;
+    final parlay = BetSlip.restored(
+      legResults: const [
+        LegResult('A', 1.9, true, payoutRatio: 1.9, status: SettleStatus.win),
+        LegResult('B', 1.9, false, status: SettleStatus.lose),
+      ],
+      stake: 100,
+      round: 1,
+      won: false,
+      payout: 0,
+    );
+    g.roundPlayed = true;
+    g.lastResults = [parlay];
+    addTearDown(() {
+      g.roundPlayed = false;
+      g.lastResults = [];
+    });
+
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: Align(child: BetSlipPanel())),
+    ));
+    await tester.pump();
+    expect(find.text('Mất'), findsOneWidget);
+    expect(find.text('Ăn đủ'), findsNothing);
   });
 }

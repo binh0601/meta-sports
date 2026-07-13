@@ -132,9 +132,11 @@ class BetSlipPanel extends StatelessWidget {
 
   /// Dong noi dung 1 phieu ket qua (dung chung cho ca thang/thua).
   Widget _betRow(BetSlip b, ColorScheme scheme) {
-    // Chan dau tien quyet dinh nhan trang thai — ve chap la ve don nen
-    // luon dung, ve don/xien 1x2 nhan win/lose dai dien ca phieu.
-    final status = b.legResults.isNotEmpty
+    // Ve don (chap hoac 1x2 1 chan): status tung chan chinh xac (chap co the
+    // an nua/hoan/thua nua). Ve xien nhieu chan: mot chan thang khong dong
+    // nghia ca phieu thang, nen lay ket qua toan phieu (b.won) de nhan khop
+    // voi so tien lai/lo va hieu ung glow/shake.
+    final status = b.legResults.length == 1
         ? b.legResults.first.status
         : (b.won ? SettleStatus.win : SettleStatus.lose);
     final (label, color) = _statusLabel(status);
