@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../logic/betting_math.dart';
 import '../logic/football_market.dart';
+import '../logic/match_insights.dart';
 import '../logic/game_state.dart';
 import '../screens/match_detail_screen.dart';
 import '../theme/brand_colors.dart';
@@ -207,6 +209,9 @@ class OddsSelectButton extends StatelessWidget {
     final label = isHdp
         ? '$team ${_fmtLine(onHome ? match.homeHandicap : -match.homeHandicap)}'
         : team;
+    final showEdge = market == MarketType.match1x2 && !match.played;
+    final edge =
+        showEdge ? MatchInsights.of(match).edgeFor(onHome, odds) : null;
     final selected = g.isSelected(match, onHome, market: market);
     final placed =
         g.isBetPlaced(match, onHome, market: market); // da dat phieu, cho ket qua
@@ -322,6 +327,23 @@ class OddsSelectButton extends StatelessWidget {
                             : scheme.onSurfaceVariant,
                       )),
                 ),
+                if (edge != null && edge >= 0.03) ...[
+                  const SizedBox(width: 3),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: kGold.withValues(alpha: .2),
+                      border: Border.all(color: kGold, width: .8),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text('VALUE',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            color: kGold)),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 2),
@@ -335,6 +357,15 @@ class OddsSelectButton extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                   color: selected || placed ? kGold : scheme.primary,
                 )),
+            if (edge != null)
+              Text(
+                '${edge >= 0 ? '+' : ''}${fmtPct(edge, 1)} edge',
+                style: TextStyle(
+                  fontSize: 8,
+                  color:
+                      edge > 0 ? Colors.lightGreenAccent : scheme.outline,
+                ),
+              ),
           ],
         ),
       ),

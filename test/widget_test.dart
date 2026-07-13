@@ -229,4 +229,25 @@ void main() {
     // timer treo khi ket thuc test.
     await tester.pump(const Duration(milliseconds: 500));
   });
+
+  testWidgets('keo 1x2 chua da hien dong Edge, keo chap khong hien',
+      (tester) async {
+    // Can man hinh cao de MatchCard duoc build trong ListView (tuong tu
+    // test "tim keo" o tren), neu khong OddsSelectButton se khong ton tai
+    // trong element tree do chua duoc layout.
+    await tester.binding.setSurfaceSize(const Size(800, 2600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    final btn1x2 = tester.widgetList<OddsSelectButton>(find.byWidgetPredicate(
+        (w) => w is OddsSelectButton && w.market == MarketType.match1x2));
+    expect(btn1x2, isNotEmpty);
+    expect(find.textContaining('edge'), findsWidgets);
+  });
 }
