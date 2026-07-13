@@ -72,7 +72,7 @@ int _poisson(Random rng, double lambda) {
 /// lam tron ve boi 0.25, doi manh la cua tren (line am ve phia ho).
 double _handicapLine(double p) {
   final edge = p - 0.5;                 // -0.15..0.15
-  final rawMag = edge.abs() / 0.15;     // 0..1.0
+  final rawMag = edge.abs() / 0.15 * 2.0; // 0..2.0 (du loai: 0.25..2.0)
   final mag = ((rawMag / 0.25).round() * 0.25).clamp(0.0, 2.0); // boi 0.25
   return edge >= 0 ? -mag : mag;        // home manh -> line am
 }

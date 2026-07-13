@@ -77,32 +77,9 @@ class MatchCard extends StatelessWidget {
                                   match: match, onHome: false)),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text('Chấp',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  letterSpacing: 1,
-                                  color: Colors.white.withValues(alpha: .5))),
-                          const SizedBox(width: 6),
-                          Expanded(
-                              child: OddsSelectButton(
-                                  match: match,
-                                  onHome: true,
-                                  market: MarketType.handicap)),
-                          const SizedBox(width: 6),
-                          Expanded(
-                              child: OddsSelectButton(
-                                  match: match,
-                                  onHome: false,
-                                  market: MarketType.handicap)),
-                        ],
-                      ),
                       const SizedBox(height: 6),
                       Text(
-                        'Xem nhận định & phong độ ›',
+                        'Xem kèo chấp & nhận định ›',
                         style: TextStyle(
                             fontSize: 10,
                             color: Theme.of(context).colorScheme.outline),

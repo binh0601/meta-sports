@@ -6,7 +6,8 @@ import 'package:house_edge_demo/logic/game_state.dart';
 import 'package:house_edge_demo/logic/handicap_settlement.dart';
 import 'package:house_edge_demo/main.dart';
 import 'package:house_edge_demo/widgets/bet_slip_panel.dart';
-import 'package:house_edge_demo/widgets/match_card.dart' show OddsSelectButton;
+import 'package:house_edge_demo/widgets/match_card.dart'
+    show MatchCard, OddsSelectButton;
 
 void main() {
   tearDown(() async => authState.logout());
@@ -127,10 +128,8 @@ void main() {
     gameState.switchLeague(League.asianCup);
   });
 
-  testWidgets('chon cua chap tren the tran -> vao phieu voi market handicap',
+  testWidgets('chon cua chap trong chi tiet tran -> vao phieu market handicap',
       (tester) async {
-    // Mo rong khung hinh test de hang keo chap moi (them o Task B5) khong
-    // bi cat khoi vung ListView, tranh tap nham xuong BetSlipPanel ben duoi.
     await tester.binding.setSurfaceSize(const Size(800, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -138,6 +137,10 @@ void main() {
     await tester.enterText(find.byType(TextField).at(0), 'demo');
     await tester.enterText(find.byType(TextField).at(1), '123456');
     await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    // Keo chap gio nam trong trang chi tiet tran -> mo chi tiet truoc
+    await tester.tap(find.byType(MatchCard).first);
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     final hdpButton = find.byWidgetPredicate((w) =>
