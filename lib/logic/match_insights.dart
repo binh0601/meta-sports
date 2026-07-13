@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'betting_math.dart';
 import 'football_market.dart';
 
 /// Thong ke "soi keo" cho 1 tran — sinh tat dinh tu id tran nen moi lan
@@ -19,6 +20,15 @@ class MatchInsights {
     required this.expertHomePct,
     required this.communityHomePct,
   });
+
+  /// Edge cam nhan: chenh lech xac suat "chuyen gia" vs xac suat ngam
+  /// tu odds hien thi. KHONG phai loi nhuan that — moi keo van co EV that
+  /// am ~5% vi overround. Chi ap dung y nghia voi keo 1x2 (thang/thua),
+  /// khong dung cho keo chap.
+  double edgeFor(bool onHome, double odds) {
+    final expertProb = (onHome ? expertHomePct : 100 - expertHomePct) / 100;
+    return expertProb - BettingMath.impliedProb(odds);
+  }
 
   factory MatchInsights.of(FootballMatch m) {
     final rng = Random(m.id * 7919); // seed theo tran -> on dinh
