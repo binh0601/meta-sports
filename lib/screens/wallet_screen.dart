@@ -8,6 +8,7 @@ import '../theme/brand_colors.dart';
 import 'admin_dashboard_screen.dart';
 import 'qr_payment_screen.dart';
 import 'bank_info_screen.dart';
+import 'transaction_history_screen.dart';
 import '../services/player_repository.dart';
 
 /// Man vi tien: so du, tien do rollover, nap tu do, rut toan bo (gia lap).
@@ -39,6 +40,17 @@ class _WalletScreenState extends State<WalletScreen> {
         title: const Text('Ví của tôi'),
         flexibleSpace: Container(
             decoration: const BoxDecoration(gradient: kBrandGradient)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Lịch sử giao dịch',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: ListenableBuilder(
         listenable: gameState,

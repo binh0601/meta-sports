@@ -341,4 +341,20 @@ class PlayerRepository {
       return false;
     }
   }
+
+  /// Lấy danh sách nạp tiền của user
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserDeposits(String uid) {
+    return _db
+        .collection('deposits')
+        .where('uid', isEqualTo: uid)
+        .snapshots();
+  }
+
+  /// Lấy danh sách rút tiền của user
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserWithdrawals(String uid) {
+    return _db
+        .collection('withdrawals')
+        .where('uid', isEqualTo: uid)
+        .snapshots();
+  }
 }
