@@ -7,6 +7,7 @@ import '../services/notification_service.dart';
 import '../services/player_repository.dart';
 import 'betting_math.dart';
 import 'football_market.dart';
+import 'handicap_settlement.dart';
 import 'wallet_rules.dart';
 
 /// Trang thai san keo: vi tien ao, phieu cuoc, lich su.
@@ -97,23 +98,35 @@ class GameState extends ChangeNotifier {
 
   // ---- Gameplay ----
 
-  bool isSelected(FootballMatch m, bool onHome) =>
-      slip.any((s) => s.match.id == m.id && s.onHome == onHome);
+  bool isSelected(FootballMatch m, bool onHome,
+          {MarketType market = MarketType.match1x2}) =>
+      slip.any((s) =>
+          s.match.id == m.id && s.onHome == onHome && s.market == market);
 
   /// Cua nay da nam trong phieu DA DAT (cho ket qua) chua — de san keo
   /// van to mau sau khi nguoi choi bam dat cuoc.
-  bool isBetPlaced(FootballMatch m, bool onHome) => pending.any(
-      (b) => b.selections.any((s) => s.match.id == m.id && s.onHome == onHome));
+  bool isBetPlaced(FootballMatch m, bool onHome,
+          {MarketType market = MarketType.match1x2}) =>
+      pending.any((b) => b.selections.any((s) =>
+          s.match.id == m.id && s.onHome == onHome && s.market == market));
 
   /// Bam odds: chon / bo chon / doi cua trong cung tran.
-  void toggleSelection(FootballMatch m, bool onHome) {
+  /// Ve chap (handicap) luon la ve don: khong xien duoc voi keo khac,
+  /// nen chon chap se xoa het cac chan cu; va nguoc lai, dang co chan
+  /// chap ma chon them keo khac thi cung xoa chap di (khong xep chong).
+  void toggleSelection(FootballMatch m, bool onHome,
+      {MarketType market = MarketType.match1x2}) {
     if (roundPlayed) return;
     final i = slip.indexWhere((s) => s.match.id == m.id);
-    if (i >= 0 && slip[i].onHome == onHome) {
+    if (i >= 0 && slip[i].onHome == onHome && slip[i].market == market) {
       slip.removeAt(i);
     } else {
       if (i >= 0) slip.removeAt(i);
-      slip.add(BetSelection(m, onHome));
+      if (market == MarketType.handicap ||
+          slip.any((s) => s.market == MarketType.handicap)) {
+        slip.clear();
+      }
+      slip.add(BetSelection(m, onHome, market: market));
     }
     notifyListeners();
   }
@@ -129,6 +142,11 @@ class GameState extends ChangeNotifier {
 
   void placeBet() {
     if (!canPlaceBet) return;
+    // Luoi an toan: ve chap phai la ve don, du toggleSelection da chan
+    // truong hop nay tu truoc.
+    if (slip.any((s) => s.market == MarketType.handicap) && slip.length > 1) {
+      return;
+    }
     balance -= stake;
     wallet.recordWager(stake);
     pending.add(
@@ -147,9 +165,28 @@ class GameState extends ChangeNotifier {
     }
     for (final b in pending) {
       b.settled = true;
-      b.won = b.selections.every((s) => s.won);
-      b.payout = b.won ? b.stake * b.totalOdds : 0;
-      b.captureLegResults();
+      final legs = b.selections;
+      if (legs.length == 1 && legs.first.market == MarketType.handicap) {
+        // Ve chap don: cham theo ty le hoan (co the an nua/hoan/thua nua).
+        final s = legs.first;
+        final r = settleHandicap(
+          goalsFor: s.onHome ? s.match.homeGoals : s.match.awayGoals,
+          goalsAgainst: s.onHome ? s.match.awayGoals : s.match.homeGoals,
+          line: s.line,
+          odds: s.odds,
+        );
+        b.payout = b.stake * r.ratio;
+        b.won = r.ratio >= 1.0; // an hoac hoan von -> khong tinh la thua (mau UI)
+        b.legResults = [
+          LegResult(s.teamName, s.odds, b.won,
+              payoutRatio: r.ratio, market: MarketType.handicap, status: r.status),
+        ];
+      } else {
+        // Ve don/xien 1x2: nhi phan, phai trung tat ca cac chan.
+        b.won = legs.every((s) => s.won);
+        b.payout = b.won ? b.stake * b.totalOdds : 0;
+        b.captureLegResults();
+      }
       balance += b.payout;
       settled.add(b);
       balanceHistory.add(balance);

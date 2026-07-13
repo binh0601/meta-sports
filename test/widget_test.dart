@@ -3,7 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:house_edge_demo/logic/auth_state.dart';
 import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
+import 'package:house_edge_demo/logic/handicap_settlement.dart';
 import 'package:house_edge_demo/main.dart';
+import 'package:house_edge_demo/widgets/bet_slip_panel.dart';
+import 'package:house_edge_demo/widgets/match_card.dart'
+    show MatchCard, OddsSelectButton;
 
 void main() {
   tearDown(() async => authState.logout());
@@ -122,5 +126,63 @@ void main() {
     expect(gameState.league, League.worldCup);
     // gameState la global — tra ve giai cu de khong anh huong test sau.
     gameState.switchLeague(League.asianCup);
+  });
+
+  testWidgets('chon cua chap trong chi tiet tran -> vao phieu market handicap',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    // Keo chap gio nam trong trang chi tiet tran -> mo chi tiet truoc
+    await tester.tap(find.byType(MatchCard).first);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    final hdpButton = find.byWidgetPredicate((w) =>
+        w is OddsSelectButton &&
+        w.market == MarketType.handicap &&
+        w.onHome == true);
+    expect(hdpButton, findsWidgets);
+    await tester.tap(hdpButton.first);
+    await tester.pump();
+    expect(gameState.slip.any((s) => s.market == MarketType.handicap), true);
+    // gameState la global — don phieu de khong anh huong test sau.
+    gameState.slip.clear();
+  });
+
+  testWidgets('nhan ket qua xien 2 chan (1 thang 1 thua) hien "Mất" khong "Ăn đủ"',
+      (tester) async {
+    // Xien 1x2: chan 0 THANG (status win) nhung chan 1 THUA -> ca phieu thua
+    // (won=false, payout 0). Nhan phai theo ket qua toan phieu, khong theo
+    // status cua chan dau tien.
+    final g = gameState;
+    final parlay = BetSlip.restored(
+      legResults: const [
+        LegResult('A', 1.9, true, payoutRatio: 1.9, status: SettleStatus.win),
+        LegResult('B', 1.9, false, status: SettleStatus.lose),
+      ],
+      stake: 100,
+      round: 1,
+      won: false,
+      payout: 0,
+    );
+    g.roundPlayed = true;
+    g.lastResults = [parlay];
+    addTearDown(() {
+      g.roundPlayed = false;
+      g.lastResults = [];
+    });
+
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: Align(child: BetSlipPanel())),
+    ));
+    await tester.pump();
+    expect(find.text('Mất'), findsOneWidget);
+    expect(find.text('Ăn đủ'), findsNothing);
   });
 }

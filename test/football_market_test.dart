@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:house_edge_demo/logic/betting_math.dart';
 import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
+import 'package:house_edge_demo/logic/handicap_settlement.dart';
 
 void main() {
   group('Sinh keo bong da', () {
@@ -26,18 +27,84 @@ void main() {
       if (m.homeWon) {
         expect(m.homeGoals, greaterThan(m.awayGoals));
       } else {
-        expect(m.awayGoals, greaterThan(m.homeGoals));
+        expect(m.awayGoals, greaterThanOrEqualTo(m.homeGoals));
       }
+    });
+
+    test('play co the ra hoa qua nhieu lan', () {
+      final rng = Random(7);
+      var draws = 0;
+      for (var i = 0; i < 400; i++) {
+        final m = generateRound(rng, i * 8).first..play(rng);
+        if (m.homeGoals == m.awayGoals) draws++;
+      }
+      expect(draws, greaterThan(40)); // >~10% hoa
+      expect(draws, lessThan(200));   // <50%
+    });
+
+    test('handicap line la boi cua 0.25 va co dau theo doi manh', () {
+      final rng = Random(3);
+      for (final m in generateRound(rng, 1)) {
+        expect((m.homeHandicap * 4) % 1, 0); // boi 0.25
+        // doi xac suat cao hon la cua tren (line am ve phia ho)
+        if (m.trueProbHome > 0.55) expect(m.homeHandicap, lessThanOrEqualTo(0));
+        if (m.trueProbHome < 0.45) expect(m.homeHandicap, greaterThanOrEqualTo(0));
+      }
+    });
+
+    test('line co the dat toi ca banh (>=0.5) qua nhieu tran', () {
+      final rng = Random(11);
+      var reached = false;
+      for (var i = 0; i < 20 && !reached; i++) {
+        for (final m in generateRound(rng, i * 8)) {
+          if (m.homeHandicap.abs() >= 0.5) reached = true;
+        }
+      }
+      expect(reached, true);
+    });
+
+    test('hoa -> ca hai cua 1x2 deu thua', () {
+      final rng = Random(5);
+      final m = generateRound(rng, 1).first;
+      // ep ra hoa: da lai cho toi khi homeGoals == awayGoals
+      while (m.homeGoals != m.awayGoals || !m.played) {
+        m.play(rng);
+      }
+      expect(m.homeGoals, m.awayGoals);
+      expect(BetSelection(m, true).won, false);
+      expect(BetSelection(m, false).won, false);
     });
   });
 
   group('Phieu cuoc', () {
     test('LegResult serialize/parse doi xung (luu Firestore)', () {
-      const leg = LegResult('Việt Nam', 1.85, true);
+      const leg = LegResult('Việt Nam', 1.85, true,
+          payoutRatio: 1.85, market: MarketType.match1x2, status: SettleStatus.win);
       final back = LegResult.fromMap(leg.toMap());
       expect(back.teamName, 'Việt Nam');
       expect(back.odds, 1.85);
       expect(back.won, true);
+      expect(back.payoutRatio, 1.85);
+      expect(back.market, MarketType.match1x2);
+      expect(back.status, SettleStatus.win);
+    });
+
+    test('LegResult.fromMap tuong thich nguoc: doc cu chi co team/odds/won',
+        () {
+      final back = LegResult.fromMap(
+          {'team': 'Thái Lan', 'odds': 2.4, 'won': true});
+      expect(back.teamName, 'Thái Lan');
+      expect(back.odds, 2.4);
+      expect(back.won, true);
+      expect(back.payoutRatio, 2.4); // suy tu won -> odds
+      expect(back.market, MarketType.match1x2);
+      expect(back.status, SettleStatus.win);
+
+      final lost = LegResult.fromMap(
+          {'team': 'Nhật Bản', 'odds': 1.9, 'won': false});
+      expect(lost.payoutRatio, 0.0);
+      expect(lost.status, SettleStatus.lose);
+      expect(lost.market, MarketType.match1x2);
     });
 
     test('BetSlip.restored: totalOdds/legs tinh tu legResults', () {

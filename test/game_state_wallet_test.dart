@@ -1,10 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
+import 'package:house_edge_demo/logic/handicap_settlement.dart';
 import 'package:house_edge_demo/logic/wallet_rules.dart';
 
 // Test tich hop vi (WalletRules) vao GameState: nap/rut, che do demo,
-// netProfit theo tong tien duoc cap/nap. Khong goi playRound (dinh
-// NotificationService), dung GameState() moi cho tung test.
+// netProfit theo tong tien duoc cap/nap. Da so khong goi playRound (dinh
+// NotificationService); rieng nhom "ve chap" ben duoi co goi playRound —
+// da xac nhan an toan (football_market_test.dart cung goi playRound).
+// Dung GameState() moi cho tung test.
 void main() {
   group('GameState vi — nap tien', () {
     test('deposit(200): balance +200, totalFunded +200, requirement +200',
@@ -89,6 +93,92 @@ void main() {
       final before = g.netProfit;
       g.deposit(300);
       expect(g.netProfit, before);
+    });
+  });
+
+  group('GameState ve chap — rang buoc single va cham diem', () {
+    test('chon chap: slip luon la ve don, khong xien duoc voi keo khac', () {
+      final g = GameState();
+      final m0 = g.matches[0];
+      final m1 = g.matches[1];
+
+      g.toggleSelection(m0, true); // keo 1x2 binh thuong
+      expect(g.slip.length, 1);
+
+      g.toggleSelection(m1, true, market: MarketType.handicap);
+      expect(g.slip.length, 1); // chon chap -> xoa het chan cu
+      expect(g.slip.first.market, MarketType.handicap);
+      expect(g.slip.first.match.id, m1.id);
+
+      g.toggleSelection(m0, true); // them keo 1x2 khac -> khong xien voi chap
+      expect(g.slip.length, 1);
+      expect(g.slip.first.market, MarketType.match1x2);
+      expect(g.slip.first.match.id, m0.id);
+    });
+
+    test('placeBet tu choi neu slip co chap + nhieu chan (luoi an toan)', () {
+      final g = GameState();
+      final m0 = g.matches[0];
+      final m1 = g.matches[1];
+      // Bo qua toggleSelection de ep truong hop bat thuong nay.
+      g.slip.addAll([
+        BetSelection(m0, true, market: MarketType.handicap),
+        BetSelection(m1, true),
+      ]);
+      g.setStake(100);
+      final balanceBefore = g.balance;
+
+      g.placeBet();
+
+      expect(g.pending, isEmpty);
+      expect(g.balance, balanceBefore);
+    });
+
+    test('ve chap don: payout va status khop voi settleHandicap tinh tu ty so thuc',
+        () {
+      final g = GameState();
+      final m = g.matches.first;
+      g.toggleSelection(m, true, market: MarketType.handicap);
+      g.setStake(100);
+      g.placeBet();
+
+      g.playRound();
+
+      expect(g.settled.length, 1);
+      final b = g.settled.first;
+      final sel = BetSelection(m, true, market: MarketType.handicap);
+      final expected = settleHandicap(
+        goalsFor: m.homeGoals,
+        goalsAgainst: m.awayGoals,
+        line: sel.line,
+        odds: sel.odds,
+      );
+      expect(b.payout, closeTo(100 * expected.ratio, 0.0001));
+      expect(b.legResults.length, 1);
+      expect(b.legResults.first.market, MarketType.handicap);
+      expect(b.legResults.first.status, expected.status);
+      expect(b.legResults.first.payoutRatio, expected.ratio);
+      expect(g.balance,
+          closeTo(GameState.startBalance - 100 + b.payout, 0.0001));
+    });
+
+    test('ve 1x2 xien: khong dung settleHandicap, van nhi phan nhu cu', () {
+      final g = GameState();
+      final m0 = g.matches[0];
+      final m1 = g.matches[1];
+      g.toggleSelection(m0, true);
+      g.toggleSelection(m1, false);
+      g.setStake(100);
+      g.placeBet();
+
+      g.playRound();
+
+      final b = g.settled.first;
+      expect(b.legResults.length, 2);
+      final expectedWon =
+          BetSelection(m0, true).won && BetSelection(m1, false).won;
+      expect(b.won, expectedWon);
+      expect(b.payout, b.won ? closeTo(100 * b.totalOdds, 0.0001) : 0);
     });
   });
 }

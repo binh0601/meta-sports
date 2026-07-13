@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../logic/betting_math.dart';
 import '../logic/football_market.dart';
 import '../logic/game_state.dart';
+import '../logic/handicap_settlement.dart';
 import 'motion_effects.dart';
 
 /// Thanh tom tat duoi san keo: mo sidebar phieu cuoc + nut da vong.
@@ -130,24 +131,53 @@ class BetSlipPanel extends StatelessWidget {
   }
 
   /// Dong noi dung 1 phieu ket qua (dung chung cho ca thang/thua).
-  Widget _betRow(BetSlip b, ColorScheme scheme) => Row(
-        children: [
-          Icon(b.won ? Icons.check_circle : Icons.cancel,
-              size: 15, color: b.won ? Colors.lightGreen : scheme.error),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              '${b.legs == 1 ? "Đơn" : "Xiên ${b.legs}"} '
-              '@${b.totalOdds.toStringAsFixed(2)} — cược ${fmtMoney(b.stake)}',
-              style: const TextStyle(fontSize: 12),
-            ),
+  Widget _betRow(BetSlip b, ColorScheme scheme) {
+    // Ve don (chap hoac 1x2 1 chan): status tung chan chinh xac (chap co the
+    // an nua/hoan/thua nua). Ve xien nhieu chan: mot chan thang khong dong
+    // nghia ca phieu thang, nen lay ket qua toan phieu (b.won) de nhan khop
+    // voi so tien lai/lo va hieu ung glow/shake.
+    final status = b.legResults.length == 1
+        ? b.legResults.first.status
+        : (b.won ? SettleStatus.win : SettleStatus.lose);
+    final (label, color) = _statusLabel(status);
+    return Row(
+      children: [
+        Icon(b.won ? Icons.check_circle : Icons.cancel,
+            size: 15, color: b.won ? Colors.lightGreen : scheme.error),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            '${b.legs == 1 ? "Đơn" : "Xiên ${b.legs}"} '
+            '@${b.totalOdds.toStringAsFixed(2)} — cược ${fmtMoney(b.stake)}',
+            style: const TextStyle(fontSize: 12),
           ),
-          Text(fmtK(b.net),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: b.won ? Colors.lightGreen : scheme.error,
-              )),
-        ],
-      );
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+            Text(fmtK(b.net),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: b.won ? Colors.lightGreen : scheme.error,
+                )),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Nhan tieng Viet + mau cho tung trang thai cham keo chap (va thang/thua
+  /// nhi phan cua 1x2, quy ve win/lose).
+  (String, Color) _statusLabel(SettleStatus s) => switch (s) {
+        SettleStatus.win => ('Ăn đủ', Colors.lightGreen),
+        SettleStatus.halfWin => ('Ăn nửa', Colors.green),
+        SettleStatus.push => ('Hoàn tiền', Colors.grey),
+        SettleStatus.halfLose => ('Thua nửa', Colors.orange),
+        SettleStatus.lose => ('Mất', Colors.red),
+      };
 }
