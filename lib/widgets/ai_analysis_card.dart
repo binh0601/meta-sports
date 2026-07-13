@@ -77,11 +77,39 @@ class _AiAnalysisCardState extends State<AiAnalysisCard> {
                 ),
               )
             else
-              Text(r.text,
-                  style: const TextStyle(fontSize: 13, height: 1.5)),
+              _TypewriterText(r.text),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Typewriter effect: animates text reveal over ~700ms.
+/// Respects disableAnimations setting (shows full text immediately if disabled).
+class _TypewriterText extends StatelessWidget {
+  final String text;
+
+  const _TypewriterText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    // If animations are disabled, show full text immediately
+    if (MediaQuery.of(context).disableAnimations) {
+      return Text(text,
+          style: const TextStyle(fontSize: 13, height: 1.5));
+    }
+
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: text.length),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Text(
+          text.substring(0, value),
+          style: const TextStyle(fontSize: 13, height: 1.5),
+        );
+      },
     );
   }
 }
