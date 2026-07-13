@@ -9,10 +9,16 @@ void main() {
     test('odds dung dung xac suat that -> edge ~0', () {
       final m = generateRound(Random(1), 1).first;
       final ins = MatchInsights.of(m);
-      // expertHomePct suy tu chinh odds hien tai (khong overround-adjust
-      // rieng) nen edge cho ca 2 cua phai gan 0.
-      expect(ins.edgeFor(true, m.oddsHome).abs(), lessThan(0.001));
-      expect(ins.edgeFor(false, m.oddsAway).abs(), lessThan(0.001));
+      // expertHomePct duoc suy tu chinh oddsHome/oddsAway (da chuan hoa bo
+      // overround), nen dung lai odds that cua tran se luon cho edge am nhe
+      // (khoang -1.7% den -3.4% tuy p) — khong bao gio duong, vi overround
+      // luon lam impliedProb (odds that) > expertProb (da chuan hoa).
+      final edgeHome = ins.edgeFor(true, m.oddsHome);
+      final edgeAway = ins.edgeFor(false, m.oddsAway);
+      expect(edgeHome, lessThan(0));
+      expect(edgeHome, greaterThan(-0.06));
+      expect(edgeAway, lessThan(0));
+      expect(edgeAway, greaterThan(-0.06));
     });
 
     test('odds cao hon xac suat ngam that -> edge duong', () {
