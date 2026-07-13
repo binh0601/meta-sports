@@ -342,7 +342,23 @@ class PlayerRepository {
     }
   }
 
-  /// Lấy danh sách nạp tiền của user
+  /// Lấy danh sách nạp tiền đã xử lý (approved/rejected) cho Admin
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToProcessedDeposits() {
+    return _db
+        .collection('deposits')
+        .where('status', whereIn: ['approved', 'rejected'])
+        .snapshots();
+  }
+
+  /// Lấy danh sách rút tiền đã xử lý (approved/rejected) cho Admin
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToProcessedWithdrawals() {
+    return _db
+        .collection('withdrawals')
+        .where('status', whereIn: ['approved', 'rejected'])
+        .snapshots();
+  }
+
+  /// Lấy danh sách nạp tiền của một user
   Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserDeposits(String uid) {
     return _db
         .collection('deposits')
@@ -350,7 +366,7 @@ class PlayerRepository {
         .snapshots();
   }
 
-  /// Lấy danh sách rút tiền của user
+  /// Lấy danh sách rút tiền của một user
   Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserWithdrawals(String uid) {
     return _db
         .collection('withdrawals')

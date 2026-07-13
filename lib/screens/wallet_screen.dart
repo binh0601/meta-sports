@@ -40,17 +40,6 @@ class _WalletScreenState extends State<WalletScreen> {
         title: const Text('Ví của tôi'),
         flexibleSpace: Container(
             decoration: const BoxDecoration(gradient: kBrandGradient)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Lịch sử giao dịch',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: ListenableBuilder(
         listenable: gameState,
@@ -70,6 +59,16 @@ class _WalletScreenState extends State<WalletScreen> {
               const SizedBox(height: 16),
               _withdrawCard(g, w, blockReason),
               const SizedBox(height: 32),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.history),
+                label: const Text('Lịch sử Nạp / Rút'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
               if (FirebaseAuth.instance.currentUser?.email == 'admin@gmail.com')
                 TextButton.icon(
                   icon: const Icon(Icons.admin_panel_settings, color: Colors.amber),

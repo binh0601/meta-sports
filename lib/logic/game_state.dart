@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -36,7 +34,6 @@ class GameState extends ChangeNotifier {
 
   String? _uid; // != null khi nguoi choi Firebase da dang nhap
   bool syncing = false; // dang tai du lieu cloud
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _userSub;
   
   String? bankName;
   String? bankAccountNo;
@@ -77,23 +74,6 @@ class GameState extends ChangeNotifier {
     lastResults = [];
     roundPlayed = false;
     matches = generateRound(_rng, roundNumber * 100, league: league);
-    
-    // Đăng ký lắng nghe Firestore thay đổi thời gian thực
-    _userSub?.cancel();
-    _userSub = FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots().listen((doc) {
-      if (doc.exists) {
-        final d = doc.data()!;
-        balance = (d['balance'] as num?)?.toDouble() ?? balance;
-        roundNumber = (d['roundNumber'] as num?)?.toInt() ?? roundNumber;
-        wallet.totalFunded = (d['totalFunded'] as num?)?.toDouble() ?? wallet.totalFunded;
-        wallet.totalWagered = (d['totalWagered'] as num?)?.toDouble() ?? wallet.totalWagered;
-        bankName = d['bankName'] as String?;
-        bankAccountNo = d['bankAccountNo'] as String?;
-        bankAccountName = d['bankAccountName'] as String?;
-        notifyListeners();
-      }
-    });
-
     syncing = false;
     notifyListeners();
   }
@@ -118,8 +98,6 @@ class GameState extends ChangeNotifier {
   void detachUser() {
     _uid = null;
     isDemoWallet = false;
-    _userSub?.cancel();
-    _userSub = null;
     _resetLocal();
   }
 

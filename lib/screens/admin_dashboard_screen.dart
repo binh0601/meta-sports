@@ -12,7 +12,7 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Admin Dashboard'),
@@ -23,6 +23,7 @@ class AdminDashboardScreen extends StatelessWidget {
             tabs: [
               Tab(text: 'Duyệt Nạp tiền'),
               Tab(text: 'Duyệt Rút tiền'),
+              Tab(text: 'Lịch sử duyệt'),
             ],
             indicatorColor: kGold,
             labelColor: kGold,
@@ -33,6 +34,7 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             _DepositTab(),
             _WithdrawTab(),
+            _HistoryTab(),
           ],
         ),
       ),
@@ -312,5 +314,116 @@ class _WithdrawTab extends StatelessWidget {
     } else {
       sm.showSnackBar(const SnackBar(content: Text('Lỗi khi từ chối.'), backgroundColor: Colors.red));
     }
+  }
+}
+
+class _HistoryTab extends StatelessWidget {
+  const _HistoryTab();
+
+  @override
+  Widget build(BuildContext context) {
+    // Để đơn giản và nhanh gọn, ta kết hợp 2 streams (Nạp và Rút) bằng rxdart hoặc StreamGroup
+    // Nhưng vì không có sẵn rxdart, ta dùng FutureBuilder hoặc ListView với 2 danh sách.
+    // Cách dễ nhất là dùng 1 StreamBuilder cho Nạp và 1 cho Rút, hiển thị thành 2 mảng.
+    // Tuy nhiên giao diện đẹp nhất là trộn lại. Ta sẽ dùng DefaultTabController lồng nhau hoặc chỉ hiện danh sách riêng.
+    
+    // Ở đây ta tạo 1 màn hình đơn giản chia làm 2 phần: Lịch sử Nạp và Lịch sử Rút.
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [Tab(text: 'Lịch sử Nạp'), Tab(text: 'Lịch sử Rút')],
+            labelColor: kGold,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: kGold,
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildProcessedDeposits(),
+                _buildProcessedWithdrawals(),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProcessedDeposits() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: PlayerRepository.instance.listenToProcessedDeposits(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final docs = snapshot.data!.docs.toList();
+        docs.sort((a, b) => _sortByDate(a, b));
+        
+        if (docs.isEmpty) return const Center(child: Text('Chưa có dữ liệu.'));
+        
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data();
+            final amount = data['amount'] as int? ?? 0;
+            final status = data['status'] as String? ?? '';
+            final isApproved = status == 'approved';
+            
+            return ListTile(
+              leading: Icon(isApproved ? Icons.check_circle : Icons.cancel, color: isApproved ? Colors.green : Colors.red),
+              title: Text('Nạp: ${fmtMoney(amount.toDouble())} - ${data['username']}'),
+              subtitle: Text(isApproved ? 'Đã duyệt' : 'Đã từ chối'),
+              trailing: Text(_formatTime(data['processedAt'])),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildProcessedWithdrawals() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: PlayerRepository.instance.listenToProcessedWithdrawals(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final docs = snapshot.data!.docs.toList();
+        docs.sort((a, b) => _sortByDate(a, b));
+        
+        if (docs.isEmpty) return const Center(child: Text('Chưa có dữ liệu.'));
+        
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data();
+            final amount = data['amount'] as int? ?? 0;
+            final status = data['status'] as String? ?? '';
+            final isApproved = status == 'approved';
+            final reason = data['rejectReason'] as String? ?? '';
+            
+            return ListTile(
+              leading: Icon(isApproved ? Icons.check_circle : Icons.cancel, color: isApproved ? Colors.green : Colors.red),
+              title: Text('Rút: ${fmtMoney(amount.toDouble())} - ${data['username']}'),
+              subtitle: Text(isApproved ? 'Đã duyệt' : 'Đã từ chối ${reason.isNotEmpty ? "($reason)" : ""}'),
+              trailing: Text(_formatTime(data['processedAt'])),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  int _sortByDate(QueryDocumentSnapshot<Map<String, dynamic>> a, QueryDocumentSnapshot<Map<String, dynamic>> b) {
+    final t1 = a.data()['processedAt'] as Timestamp?;
+    final t2 = b.data()['processedAt'] as Timestamp?;
+    if (t1 == null && t2 == null) return 0;
+    if (t1 == null) return 1;
+    if (t2 == null) return -1;
+    return t2.compareTo(t1);
+  }
+
+  String _formatTime(dynamic timestamp) {
+    if (timestamp == null || timestamp is! Timestamp) return '';
+    final d = timestamp.toDate();
+    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} - ${d.day}/${d.month}';
   }
 }
