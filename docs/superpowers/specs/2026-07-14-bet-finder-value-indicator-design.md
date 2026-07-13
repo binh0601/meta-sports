@@ -172,6 +172,16 @@ giác "hời"). Âm = ngược lại.
   nếu đã tồn tại): kiểm tra `edgeFor` trả đúng dấu/giá trị cho vài case cụ thể
   (home/away, odds cao/thấp, expertPct khác nhau).
 
+## Ghi chú phát hiện khi lên plan
+
+Codebase đã có sẵn kèo chấp (`MarketType.match1x2` / `MarketType.handicap`,
+`OddsSelectButton.market`) — spec ban đầu viết trước khi biết điều này.
+Quyết định: **Value indicator chỉ áp dụng cho `MarketType.match1x2`** (edge
+dựa trên `expertHomePct` không có ý nghĩa với kèo chấp vì odds chấp ~1.90 cả
+2 cửa, không phản ánh xác suất thắng gốc). NL bet finder **không** nhận diện
+market chấp — giữ đúng schema `BetQueryFilter` đã duyệt (tên đội, cửa, odds,
+giải).
+
 ## Không làm trong scope này
 
 - Không thêm market tài/xỉu hay giải đấu theo quốc gia.
