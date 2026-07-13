@@ -56,10 +56,14 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
   void _onTick() {
     _tickCount++;
     if (_isDemoMode) {
+      // Demo: tick den het tran roi moi sang tran moi (khong reset giua chung).
+      final m = _matches.first;
       setState(() {
-        _matches = [LiveMatch.tickDemo(_matches.first, _rng)];
+        _matches = [m.isLive ? LiveMatch.tickDemo(m, _rng) : LiveMatch.demo()];
       });
+      return;
     }
+    // Che do that: dinh ky lay lai ty so live tu API.
     if (_tickCount % 10 == 0) {
       _load();
     }
