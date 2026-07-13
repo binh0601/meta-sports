@@ -41,4 +41,60 @@ void main() {
     final f = BetQueryParser.parse('asdkjaslkdj random text', teams);
     expect(f.isEmpty, true);
   });
+
+  // Regression tests: word boundary matching to prevent false positives
+  // for short team names after diacritic normalization
+  test('short team name "Ý" should NOT match as substring in common word', () {
+    // 'Ý' normalizes to 'y', but should not match inside 'nay' (today)
+    const shortTeams = ['Ý', 'Úc', 'Đức'];
+    final f = BetQueryParser.parse('kèo tối nay', shortTeams);
+    expect(f.teamKeywords, isNot(contains('Ý')),
+        reason:
+            'Team "Ý" should not match in "kèo tối nay" (contains "y" as part of "nay")');
+  });
+
+  test('short team name "Úc" should NOT match as substring in common word',
+      () {
+    // 'Úc' normalizes to 'uc', but should not match inside 'được' -> 'duoc'
+    const shortTeams = ['Úc'];
+    final f = BetQueryParser.parse('kèo được không', shortTeams);
+    expect(f.teamKeywords, isNot(contains('Úc')),
+        reason:
+            'Team "Úc" should not match in "kèo được không" (contains "uc" as part of "duoc")');
+  });
+
+  test('short team name "Ý" SHOULD match when explicitly mentioned as word',
+      () {
+    // When 'Ý' is mentioned as a standalone word, it should match
+    const shortTeams = ['Ý'];
+    final f = BetQueryParser.parse('kèo Ý thắng', shortTeams);
+    expect(f.teamKeywords, contains('Ý'),
+        reason: 'Team "Ý" should match when mentioned as standalone word');
+  });
+
+  test('short team name "Úc" SHOULD match when explicitly mentioned as word',
+      () {
+    // When 'Úc' is mentioned as a standalone word, it should match
+    const shortTeams = ['Úc'];
+    final f = BetQueryParser.parse('cửa Úc dưới 2.0', shortTeams);
+    expect(f.teamKeywords, contains('Úc'),
+        reason: 'Team "Úc" should match when mentioned as standalone word');
+  });
+
+  test('multi-word team name regression: "Việt Nam" still matches correctly',
+      () {
+    // Ensure multi-word team names still work after word boundary fix
+    final f = BetQueryParser.parse('cửa Việt Nam thắng', teams);
+    expect(f.teamKeywords, contains('Việt Nam'),
+        reason: 'Multi-word team "Việt Nam" should still match correctly');
+  });
+
+  test('multi-word team name should NOT match if only partial phrase in query',
+      () {
+    // 'Việt Nam' should not match if only 'Việt' appears (as partial phrase)
+    final f = BetQueryParser.parse('cửa Việt thắng', teams);
+    expect(f.teamKeywords, isNot(contains('Việt Nam')),
+        reason:
+            'Multi-word team "Việt Nam" should not match if only first word appears');
+  });
 }

@@ -6,6 +6,24 @@ import 'football_market.dart';
 class BetQueryParser {
   BetQueryParser._();
 
+  /// Check if [phrase] appears as whole words in [query] (not as a substring
+  /// of a longer word). This prevents false positives for short team names.
+  /// For example, team 'Ý' (normalized to 'y') should not match inside 'nay'
+  /// (today), and team 'Úc' (normalized to 'uc') should not match inside
+  /// 'được' (normalized to 'duoc').
+  static bool _containsWholeWords(String query, String phrase) {
+    final queryWords = query.split(RegExp(r'\s+'));
+    final phraseWords = phrase.split(RegExp(r'\s+'));
+    if (phraseWords.isEmpty) return false;
+    for (var i = 0; i + phraseWords.length <= queryWords.length; i++) {
+      if (queryWords.sublist(i, i + phraseWords.length).join(' ') ==
+          phraseWords.join(' ')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// [teamNames]: ten doi dang hien thi trong vong dau hien tai — dung de
   /// nhan dien tu khoa ten doi trong cau hoi.
   static BetQueryFilter parse(String query, List<String> teamNames) {
@@ -39,8 +57,9 @@ class BetQueryParser {
       league = League.asianCup;
     }
 
-    final teamKeywords =
-        teamNames.where((t) => q.contains(normalizeVi(t))).toList();
+    final teamKeywords = teamNames
+        .where((t) => _containsWholeWords(q, normalizeVi(t)))
+        .toList();
 
     return BetQueryFilter(
       teamKeywords: teamKeywords,
