@@ -98,13 +98,17 @@ class GameState extends ChangeNotifier {
 
   // ---- Gameplay ----
 
-  bool isSelected(FootballMatch m, bool onHome) =>
-      slip.any((s) => s.match.id == m.id && s.onHome == onHome);
+  bool isSelected(FootballMatch m, bool onHome,
+          {MarketType market = MarketType.match1x2}) =>
+      slip.any((s) =>
+          s.match.id == m.id && s.onHome == onHome && s.market == market);
 
   /// Cua nay da nam trong phieu DA DAT (cho ket qua) chua — de san keo
   /// van to mau sau khi nguoi choi bam dat cuoc.
-  bool isBetPlaced(FootballMatch m, bool onHome) => pending.any(
-      (b) => b.selections.any((s) => s.match.id == m.id && s.onHome == onHome));
+  bool isBetPlaced(FootballMatch m, bool onHome,
+          {MarketType market = MarketType.match1x2}) =>
+      pending.any((b) => b.selections.any((s) =>
+          s.match.id == m.id && s.onHome == onHome && s.market == market));
 
   /// Bam odds: chon / bo chon / doi cua trong cung tran.
   /// Ve chap (handicap) luon la ve don: khong xien duoc voi keo khac,

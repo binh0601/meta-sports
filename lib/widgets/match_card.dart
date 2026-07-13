@@ -77,6 +77,29 @@ class MatchCard extends StatelessWidget {
                                   match: match, onHome: false)),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text('Chấp',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  letterSpacing: 1,
+                                  color: Colors.white.withValues(alpha: .5))),
+                          const SizedBox(width: 6),
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match,
+                                  onHome: true,
+                                  market: MarketType.handicap)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match,
+                                  onHome: false,
+                                  market: MarketType.handicap)),
+                        ],
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         'Xem nhận định & phong độ ›',
@@ -188,19 +211,50 @@ class MatchCard extends StatelessWidget {
 class OddsSelectButton extends StatelessWidget {
   final FootballMatch match;
   final bool onHome;
+  final MarketType market;
   const OddsSelectButton(
-      {super.key, required this.match, required this.onHome});
+      {super.key,
+      required this.match,
+      required this.onHome,
+      this.market = MarketType.match1x2});
 
   @override
   Widget build(BuildContext context) {
     final g = gameState;
     final scheme = Theme.of(context).colorScheme;
+    final isHdp = market == MarketType.handicap;
     final team = onHome ? match.home : match.away;
-    final odds = onHome ? match.oddsHome : match.oddsAway;
-    final selected = g.isSelected(match, onHome);
-    final placed = g.isBetPlaced(match, onHome); // da dat phieu, cho ket qua
+    final odds = isHdp
+        ? (onHome ? match.oddsHdpHome : match.oddsHdpAway)
+        : (onHome ? match.oddsHome : match.oddsAway);
+    final label = isHdp
+        ? '$team ${_fmtLine(onHome ? match.homeHandicap : -match.homeHandicap)}'
+        : team;
+    final selected = g.isSelected(match, onHome, market: market);
+    final placed =
+        g.isBetPlaced(match, onHome, market: market); // da dat phieu, cho ket qua
 
     if (match.played) {
+      if (isHdp) {
+        // Keo chap: khong ket luan thang/thua tren the (co the an nua/hoan/
+        // thua nua) — chi hien lai cua da chon, mau trung tinh.
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: scheme.surfaceContainerHighest,
+          ),
+          child: Column(
+            children: [
+              Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: scheme.outline)),
+              Text('@${odds.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 11, color: scheme.outline)),
+            ],
+          ),
+        );
+      }
       final isWinner = match.homeGoals != match.awayGoals && onHome == match.homeWon;
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -223,8 +277,8 @@ class OddsSelectButton extends StatelessWidget {
 
     return ScaleTap(
       onTap: () {
-        final wasSelected = g.isSelected(match, onHome);
-        g.toggleSelection(match, onHome);
+        final wasSelected = g.isSelected(match, onHome, market: market);
+        g.toggleSelection(match, onHome, market: market);
         // Vua chon keo -> truot sidebar phieu cuoc ra cho nguoi choi thay
         // (man chi tiet tran khong co drawer nen phai kiem tra truoc)
         if (!wasSelected) {
@@ -281,7 +335,7 @@ class OddsSelectButton extends StatelessWidget {
                   const SizedBox(width: 3),
                 ],
                 Flexible(
-                  child: Text(team,
+                  child: Text(label,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
@@ -309,4 +363,17 @@ class OddsSelectButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Dinh dang line chap: co dau +/- ro rang, bo so 0 thua ("-0.5", "+0.75",
+/// "0", "+1").
+String _fmtLine(double v) {
+  if (v == 0) return '0';
+  final sign = v > 0 ? '+' : '-';
+  var s = v.abs().toStringAsFixed(2);
+  while (s.endsWith('0')) {
+    s = s.substring(0, s.length - 1);
+  }
+  if (s.endsWith('.')) s = s.substring(0, s.length - 1);
+  return '$sign$s';
 }

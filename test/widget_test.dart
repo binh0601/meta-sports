@@ -4,6 +4,7 @@ import 'package:house_edge_demo/logic/auth_state.dart';
 import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
 import 'package:house_edge_demo/main.dart';
+import 'package:house_edge_demo/widgets/match_card.dart' show OddsSelectButton;
 
 void main() {
   tearDown(() async => authState.logout());
@@ -122,5 +123,30 @@ void main() {
     expect(gameState.league, League.worldCup);
     // gameState la global — tra ve giai cu de khong anh huong test sau.
     gameState.switchLeague(League.asianCup);
+  });
+
+  testWidgets('chon cua chap tren the tran -> vao phieu voi market handicap',
+      (tester) async {
+    // Mo rong khung hinh test de hang keo chap moi (them o Task B5) khong
+    // bi cat khoi vung ListView, tranh tap nham xuong BetSlipPanel ben duoi.
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    final hdpButton = find.byWidgetPredicate((w) =>
+        w is OddsSelectButton &&
+        w.market == MarketType.handicap &&
+        w.onHome == true);
+    expect(hdpButton, findsWidgets);
+    await tester.tap(hdpButton.first);
+    await tester.pump();
+    expect(gameState.slip.any((s) => s.market == MarketType.handicap), true);
+    // gameState la global — don phieu de khong anh huong test sau.
+    gameState.slip.clear();
   });
 }
