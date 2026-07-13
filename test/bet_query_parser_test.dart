@@ -55,12 +55,12 @@ void main() {
 
   test('short team name "Úc" should NOT match as substring in common word',
       () {
-    // 'Úc' normalizes to 'uc', but should not match inside 'được' -> 'duoc'
+    // 'Úc' normalizes to 'uc', but should not match inside 'thực' -> 'thuc'
     const shortTeams = ['Úc'];
-    final f = BetQueryParser.parse('kèo được không', shortTeams);
+    final f = BetQueryParser.parse('kèo thực tế nào', shortTeams);
     expect(f.teamKeywords, isNot(contains('Úc')),
         reason:
-            'Team "Úc" should not match in "kèo được không" (contains "uc" as part of "duoc")');
+            'Team "Úc" should not match in "kèo thực tế nào" (contains "uc" as part of "thuc")');
   });
 
   test('short team name "Ý" SHOULD match when explicitly mentioned as word',
