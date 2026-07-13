@@ -93,8 +93,9 @@ class _BetSlipDrawerState extends State<BetSlipDrawer> {
                                       '${s.teamName} @${s.odds.toStringAsFixed(2)}',
                                       style:
                                           const TextStyle(fontSize: 11)),
-                                  onDeleted: () =>
-                                      g.toggleSelection(s.match, s.onHome),
+                                  onDeleted: () => g.toggleSelection(
+                                      s.match, s.onHome,
+                                      market: s.market),
                                 ),
                             ],
                           ),
