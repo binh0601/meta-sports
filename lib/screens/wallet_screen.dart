@@ -84,7 +84,10 @@ class _WalletScreenState extends State<WalletScreen> {
             const SizedBox(height: 6),
             Text(fmtMoney(balance),
                 style: const TextStyle(
-                    fontSize: 30, fontWeight: FontWeight.w800, color: kGold)),
+                    fontFamily: kDisplayFont,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: kGold)),
           ],
         ),
       );

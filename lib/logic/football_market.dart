@@ -137,13 +137,31 @@ const List<(String, String)> _teams = [
   ('Jordan', 'jo'),
 ];
 
+/// Giai dau: 2 pool doi khac nhau, cung co che odds.
+enum League { asianCup, worldCup }
+
+extension LeagueInfo on League {
+  String get label =>
+      this == League.asianCup ? 'CUP CHÂU Á 2026' : 'WORLD CUP 2026';
+}
+
+/// 16 doi Au-My cho World Cup — co tai tu flagcdn (Task 1).
+const List<(String, String)> _wcTeams = [
+  ('Đức', 'de'), ('Pháp', 'fr'), ('Anh', 'gb-eng'), ('Tây Ban Nha', 'es'),
+  ('Ý', 'it'), ('Bồ Đào Nha', 'pt'), ('Hà Lan', 'nl'), ('Bỉ', 'be'),
+  ('Croatia', 'hr'), ('Đan Mạch', 'dk'), ('Brazil', 'br'),
+  ('Argentina', 'ar'), ('Uruguay', 'uy'), ('Mỹ', 'us'),
+  ('Mexico', 'mx'), ('Morocco', 'ma'),
+];
+
 const List<String> _kickoffSlots = [
   '17:00', '18:00', '19:30', '20:00', '21:00', '21:30', '22:00', '23:15',
 ];
 
 /// Sinh 1 vong dau 8 tran, boc tham 16 doi tuyen ngau nhien.
-List<FootballMatch> generateRound(Random rng, int startId) {
-  final teams = [..._teams]..shuffle(rng);
+List<FootballMatch> generateRound(Random rng, int startId, {League league = League.asianCup}) {
+  final pool = league == League.worldCup ? _wcTeams : _teams;
+  final teams = [...pool]..shuffle(rng);
   double round2(double v) => (v * 100).roundToDouble() / 100;
   return List.generate(8, (i) {
     final p = 0.35 + rng.nextDouble() * 0.30; // xac suat that 35%..65%

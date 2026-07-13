@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../logic/betting_math.dart';
+import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import 'motion_effects.dart';
 
@@ -91,27 +92,22 @@ class BetSlipPanel extends StatelessWidget {
           for (final b in g.lastResults)
             Padding(
               padding: const EdgeInsets.only(bottom: 3),
-              child: Row(
-                children: [
-                  Icon(b.won ? Icons.check_circle : Icons.cancel,
-                      size: 15,
-                      color: b.won ? Colors.lightGreen : scheme.error),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '${b.legs == 1 ? "Đơn" : "Xiên ${b.legs}"} '
-                      '@${b.totalOdds.toStringAsFixed(2)} — cược ${fmtMoney(b.stake)}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                  Text(fmtK(b.net),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: b.won ? Colors.lightGreen : scheme.error,
-                      )),
-                ],
-              ),
+              child: b.won
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.lightGreen),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.lightGreen.withValues(alpha: .35),
+                              blurRadius: 12),
+                        ],
+                      ),
+                      child: _betRow(b, scheme),
+                    )
+                  : ShakeOnce(child: _betRow(b, scheme)),
             ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -132,4 +128,26 @@ class BetSlipPanel extends StatelessWidget {
       ],
     );
   }
+
+  /// Dong noi dung 1 phieu ket qua (dung chung cho ca thang/thua).
+  Widget _betRow(BetSlip b, ColorScheme scheme) => Row(
+        children: [
+          Icon(b.won ? Icons.check_circle : Icons.cancel,
+              size: 15, color: b.won ? Colors.lightGreen : scheme.error),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '${b.legs == 1 ? "Đơn" : "Xiên ${b.legs}"} '
+              '@${b.totalOdds.toStringAsFixed(2)} — cược ${fmtMoney(b.stake)}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+          Text(fmtK(b.net),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: b.won ? Colors.lightGreen : scheme.error,
+              )),
+        ],
+      );
 }

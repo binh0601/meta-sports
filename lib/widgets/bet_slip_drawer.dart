@@ -139,27 +139,40 @@ class _BetSlipDrawerState extends State<BetSlipDrawer> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: g.canPlaceBet
-                                  ? () {
-                                      final msg =
-                                          'Đã đặt ${fmtMoney(g.stake)} — trúng '
-                                          'nhận ${fmtMoney(g.stake * g.slipOdds)}';
-                                      g.placeBet();
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
-                                              content: Text(msg),
-                                              duration: const Duration(
-                                                  seconds: 2)));
-                                    }
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: g.canPlaceBet
+                                  ? [
+                                      BoxShadow(
+                                          color: kGold.withValues(alpha: .4),
+                                          blurRadius: 12),
+                                    ]
                                   : null,
-                              child: Text(g.stake > g.balance
-                                  ? 'Không đủ số dư'
-                                  : 'Đặt ${fmtMoney(g.stake)} → trúng nhận '
-                                      '${fmtMoney(g.stake * g.slipOdds)}'),
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: g.canPlaceBet
+                                    ? () {
+                                        final msg =
+                                            'Đã đặt ${fmtMoney(g.stake)} — trúng '
+                                            'nhận ${fmtMoney(g.stake * g.slipOdds)}';
+                                        g.placeBet();
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content: Text(msg),
+                                                duration: const Duration(
+                                                    seconds: 2)));
+                                      }
+                                    : null,
+                                child: Text(g.stake > g.balance
+                                    ? 'Không đủ số dư'
+                                    : 'Đặt ${fmtMoney(g.stake)} → trúng nhận '
+                                        '${fmtMoney(g.stake * g.slipOdds)}'),
+                              ),
                             ),
                           ),
                         ],

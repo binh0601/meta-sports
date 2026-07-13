@@ -149,7 +149,7 @@ class MatchDetailScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
           child: Column(
         children: [
-          Text('CUP CHÂU Á • HÔM NAY',
+          Text('${gameState.league.label} • HÔM NAY',
               style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 2,
@@ -165,6 +165,7 @@ class MatchDetailScreen extends StatelessWidget {
                         ? '${match.homeGoals} - ${match.awayGoals}'
                         : match.kickoff,
                     style: const TextStyle(
+                        fontFamily: kDisplayFont,
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: kGold),

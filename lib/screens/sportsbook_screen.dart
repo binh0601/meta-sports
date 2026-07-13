@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/bet_slip_drawer.dart';
 import '../widgets/bet_slip_panel.dart';
 import '../widgets/brand_crest.dart';
+import '../widgets/coin_burst.dart';
 import '../widgets/gold_rain.dart';
 import '../widgets/hero_banner.dart';
+import '../widgets/league_switcher.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
 import '../widgets/promo_banner_carousel.dart';
@@ -37,7 +40,9 @@ class SportsbookScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 const Text('MEGA SPORTS',
                     style: TextStyle(
-                        fontWeight: FontWeight.w800, letterSpacing: 2)),
+                        fontFamily: kDisplayFont,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2)),
                 const SizedBox(width: 8),
                 Container(
                   padding:
@@ -46,8 +51,11 @@ class SportsbookScreen extends StatelessWidget {
                     border: Border.all(color: kGold),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text('CUP CHÂU Á',
-                      style: TextStyle(fontSize: 9, color: kGold)),
+                  child: Text(
+                      g.league == League.worldCup
+                          ? 'WORLD CUP'
+                          : 'CUP CHÂU Á',
+                      style: const TextStyle(fontSize: 9, color: kGold)),
                 ),
               ],
             ),
@@ -63,9 +71,16 @@ class SportsbookScreen extends StatelessWidget {
                       children: [
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
-                          child: PromoBannerCarousel(),
+                          child: Column(
+                            children: [
+                              LeagueSwitcher(),
+                              SizedBox(height: 8),
+                              PromoBannerCarousel(),
+                            ],
+                          ),
                         ),
-                        HeroBanner(roundNumber: g.roundNumber),
+                        HeroBanner(
+                            roundNumber: g.roundNumber, league: g.league),
                         for (var i = 0; i < g.matches.length; i++)
                           MatchCard(
                             key: ValueKey(g.matches[i].id),
@@ -95,41 +110,44 @@ class SportsbookScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(gradient: kBrandGradient),
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-      child: Row(
-        children: [
-          const Icon(Icons.account_balance_wallet, size: 18, color: kGold),
-          const SizedBox(width: 6),
-          AnimatedMoneyText(
-            value: g.balance,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: kGold,
+      child: CoinBurst(
+        child: Row(
+          children: [
+            const Icon(Icons.account_balance_wallet, size: 18, color: kGold),
+            const SizedBox(width: 6),
+            AnimatedMoneyText(
+              value: g.balance,
+              style: const TextStyle(
+                fontFamily: kDisplayFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: kGold,
+              ),
             ),
-          ),
-          const Spacer(),
-          // Bam chip -> mo sidebar phieu cuoc (can Builder de lay context
-          // nam duoi Scaffold)
-          Builder(
-            builder: (ctx) => GestureDetector(
-              onTap: () => Scaffold.of(ctx).openEndDrawer(),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  g.pending.isEmpty
-                      ? 'Vòng ${g.roundNumber}'
-                      : 'Vòng ${g.roundNumber} • ${g.pending.length} phiếu chờ',
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
+            const Spacer(),
+            // Bam chip -> mo sidebar phieu cuoc (can Builder de lay context
+            // nam duoi Scaffold)
+            Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    g.pending.isEmpty
+                        ? 'Vòng ${g.roundNumber}'
+                        : 'Vòng ${g.roundNumber} • ${g.pending.length} phiếu chờ',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

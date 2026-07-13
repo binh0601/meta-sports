@@ -77,11 +77,39 @@ class _AiAnalysisCardState extends State<AiAnalysisCard> {
                 ),
               )
             else
-              Text(r.text,
-                  style: const TextStyle(fontSize: 13, height: 1.5)),
+              _TypewriterText(r.text),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Hieu ung go may: chu hien dan trong ~700ms.
+/// Ton trong disableAnimations (hien full text ngay khi tat animation).
+class _TypewriterText extends StatelessWidget {
+  final String text;
+
+  const _TypewriterText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    // Tat animation -> hien nguyen doan ngay
+    if (MediaQuery.of(context).disableAnimations) {
+      return Text(text,
+          style: const TextStyle(fontSize: 13, height: 1.5));
+    }
+
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: text.length),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Text(
+          text.substring(0, value),
+          style: const TextStyle(fontSize: 13, height: 1.5),
+        );
+      },
     );
   }
 }

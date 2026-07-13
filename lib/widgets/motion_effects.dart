@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../logic/betting_math.dart';
@@ -119,6 +121,104 @@ class _SpinningBallIconState extends State<SpinningBallIcon>
       turns: _ctrl,
       child:
           Icon(Icons.sports_soccer, size: widget.size, color: widget.color),
+    );
+  }
+}
+
+/// Cham nho nhap nhay (scale 1 -> 1.35 + mo dan) canh nhan "MO CUOC" —
+/// bao hieu tran chua da. disableAnimations (vd. test) -> cham tinh.
+class PulseDot extends StatefulWidget {
+  final Color color;
+  const PulseDot(this.color, {super.key});
+
+  @override
+  State<PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<PulseDot>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _ctrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ctrl == null && !MediaQuery.of(context).disableAnimations) {
+      _ctrl = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 1200))
+        ..repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  Widget _dot(double t) => Transform.scale(
+        scale: 1 + t * 0.35,
+        child: Opacity(
+          opacity: 1 - t * 0.5,
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration:
+                BoxDecoration(color: widget.color, shape: BoxShape.circle),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) return _dot(0);
+    return AnimatedBuilder(
+        animation: ctrl, builder: (_, _) => _dot(ctrl.value));
+  }
+}
+
+/// Rung ngang mot lan khi widget vua mount — danh cho phieu thua (bao hieu
+/// "mat tien"). disableAnimations (vd. test) -> dung yen.
+class ShakeOnce extends StatefulWidget {
+  final Widget child;
+  const ShakeOnce({super.key, required this.child});
+
+  @override
+  State<ShakeOnce> createState() => _ShakeOnceState();
+}
+
+class _ShakeOnceState extends State<ShakeOnce>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _ctrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ctrl == null && !MediaQuery.of(context).disableAnimations) {
+      _ctrl = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 350))
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) return widget.child;
+    return AnimatedBuilder(
+      animation: ctrl,
+      builder: (_, child) {
+        final t = ctrl.value;
+        final dx = sin(t * pi * 4) * 6 * (1 - t);
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: widget.child,
     );
   }
 }

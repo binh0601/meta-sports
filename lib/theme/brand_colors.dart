@@ -18,3 +18,11 @@ const LinearGradient kHeroGradient = LinearGradient(
   end: Alignment.bottomCenter,
   colors: [Color(0xFF2563EB), Color(0xFF1E1B4B)],
 );
+
+/// Chu display kieu esports cho tieu de, odds, so tien.
+const String kDisplayFont = 'RussoOne';
+
+TextStyle displayStyle({double size = 20, Color color = Colors.white,
+        double spacing = 1}) =>
+    TextStyle(fontFamily: kDisplayFont, fontSize: size, color: color,
+        letterSpacing: spacing);

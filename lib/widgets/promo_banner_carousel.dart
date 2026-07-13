@@ -35,10 +35,12 @@ const List<_Promo> _promos = [
       Icons.card_giftcard, [Color(0xFF047857), Color(0xFF064E3B)]),
 ];
 
-class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
+class _PromoBannerCarouselState extends State<PromoBannerCarousel>
+    with SingleTickerProviderStateMixin {
   final _controller = PageController();
   Timer? _timer;
   int _page = 0;
+  AnimationController? _shimmerCtrl;
 
   @override
   void initState() {
@@ -53,9 +55,20 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shimmerCtrl == null && !MediaQuery.of(context).disableAnimations) {
+      _shimmerCtrl = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 2600))
+        ..repeat();
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     _controller.dispose();
+    _shimmerCtrl?.dispose();
     super.dispose();
   }
 
@@ -71,11 +84,13 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
       children: [
         SizedBox(
           height: 96,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: _promos.length,
-            onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (context, i) {
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _controller,
+                itemCount: _promos.length,
+                onPageChanged: (i) => setState(() => _page = i),
+                itemBuilder: (context, i) {
               final p = _promos[i];
               return GestureDetector(
                 onTap: _open,
@@ -114,6 +129,43 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
                 ),
               );
             },
+              ),
+              if (_shimmerCtrl != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final w = constraints.maxWidth;
+                        return AnimatedBuilder(
+                          animation: _shimmerCtrl!,
+                          builder: (_, _) {
+                            final dx = -w + _shimmerCtrl!.value * (2 * w);
+                            return Transform.translate(
+                              offset: Offset(dx, 0),
+                              child: Transform.rotate(
+                                angle: -0.3,
+                                child: Container(
+                                  width: 60,
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0),
+                                        Colors.white.withValues(alpha: .18),
+                                        Colors.white.withValues(alpha: 0),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 6),
