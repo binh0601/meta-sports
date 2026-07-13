@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../logic/betting_math.dart';
@@ -172,5 +174,51 @@ class _PulseDotState extends State<PulseDot>
     if (ctrl == null) return _dot(0);
     return AnimatedBuilder(
         animation: ctrl, builder: (_, _) => _dot(ctrl.value));
+  }
+}
+
+/// Rung ngang mot lan khi widget vua mount — danh cho phieu thua (bao hieu
+/// "mat tien"). disableAnimations (vd. test) -> dung yen.
+class ShakeOnce extends StatefulWidget {
+  final Widget child;
+  const ShakeOnce({super.key, required this.child});
+
+  @override
+  State<ShakeOnce> createState() => _ShakeOnceState();
+}
+
+class _ShakeOnceState extends State<ShakeOnce>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _ctrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ctrl == null && !MediaQuery.of(context).disableAnimations) {
+      _ctrl = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 350))
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) return widget.child;
+    return AnimatedBuilder(
+      animation: ctrl,
+      builder: (_, child) {
+        final t = ctrl.value;
+        final dx = sin(t * pi * 4) * 6 * (1 - t);
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: widget.child,
+    );
   }
 }
