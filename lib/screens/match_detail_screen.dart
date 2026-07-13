@@ -6,7 +6,14 @@ import '../logic/match_insights.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/ai_analysis_card.dart';
 import '../widgets/match_card.dart' show OddsSelectButton;
-import '../widgets/stat_card.dart';
+import '../widgets/motion_effects.dart';
+
+/// 3 anh nen hero xoay theo id tran de moi tran mot sac thai rieng.
+const _heroImages = [
+  'assets/images/stadium_night.jpg',
+  'assets/images/action_worldcup.jpg',
+  'assets/images/action_stadium_flare.jpg',
+];
 
 /// Chi tiet tran dau: phong do, doi dau, nhan dinh, % cong dong —
 /// du lieu "soi keo" nhin rat thuyet phuc, nhung odds da tru san bien.
@@ -34,61 +41,56 @@ class MatchDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!match.played) ...[
-                    Row(children: [
-                      Expanded(
-                          child: OddsSelectButton(
-                              match: match, onHome: true)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: OddsSelectButton(
-                              match: match, onHome: false)),
-                    ]),
-                    const SizedBox(height: 4),
-                    Center(
-                      child: Text(
-                        'Chọn cửa tại đây rồi về tab Trận đấu để đặt phiếu',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color:
-                                Theme.of(context).colorScheme.outline),
-                      ),
-                    ),
-                  ],
-                  const SectionTitle('Nhận định chuyên gia'),
-                  _splitBar(context, ins.expertHomePct,
-                      leftLabel: '${ins.expertHomePct}% ${match.home}',
-                      rightLabel:
-                          '${match.away} ${100 - ins.expertHomePct}%'),
-                  const SectionTitle('AI nhận định'),
-                  AiAnalysisCard(match: match),
-                  const SectionTitle('Phong độ 5 trận gần nhất'),
-                  _formRow(context, match.home, match.flagHome, ins.formHome),
-                  const SizedBox(height: 8),
-                  _formRow(context, match.away, match.flagAway,
-                      ins.formAway),
-                  const SectionTitle('Đối đầu gần đây'),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
+                  if (!match.played)
+                    EntranceSlide(
+                      index: 0,
                       child: Column(
                         children: [
-                          for (final line in ins.h2h)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 4),
-                              child: Text(line,
-                                  style: const TextStyle(fontSize: 13)),
+                          Row(children: [
+                            Expanded(
+                                child: OddsSelectButton(
+                                    match: match, onHome: true)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: OddsSelectButton(
+                                    match: match, onHome: false)),
+                          ]),
+                          const SizedBox(height: 4),
+                          Center(
+                            child: Text(
+                              'Chọn cửa tại đây rồi về tab Trận đấu để đặt phiếu',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      Theme.of(context).colorScheme.outline),
                             ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                  const SectionTitle('Cộng đồng đang đặt'),
-                  _splitBar(context, ins.communityHomePct,
-                      leftLabel: '${ins.communityHomePct}% chọn ${match.home}',
-                      rightLabel:
-                          '${100 - ins.communityHomePct}% chọn ${match.away}'),
+                  _section(1, 'Nhận định chuyên gia', const Color(0xFF3B82F6),
+                      _splitBar(context, ins.expertHomePct,
+                          leftLabel: '${ins.expertHomePct}% ${match.home}',
+                          rightLabel:
+                              '${match.away} ${100 - ins.expertHomePct}%')),
+                  _section(2, 'AI nhận định', kGold,
+                      AiAnalysisCard(match: match)),
+                  _section(3, 'Phong độ 5 trận gần nhất',
+                      const Color(0xFF22C55E), Column(children: [
+                        _formRow(
+                            context, match.home, match.flagHome, ins.formHome),
+                        const SizedBox(height: 8),
+                        _formRow(
+                            context, match.away, match.flagAway, ins.formAway),
+                      ])),
+                  _section(4, 'Đối đầu gần đây', const Color(0xFFA855F7),
+                      _h2hCard(ins.h2h)),
+                  _section(5, 'Cộng đồng đang đặt', const Color(0xFFF97316),
+                      _splitBar(context, ins.communityHomePct,
+                          leftLabel:
+                              '${ins.communityHomePct}% chọn ${match.home}',
+                          rightLabel:
+                              '${100 - ins.communityHomePct}% chọn ${match.away}')),
                 ],
               ),
             ),
@@ -129,10 +131,10 @@ class MatchDetailScreen extends StatelessWidget {
 
     return Stack(
       children: [
-        // Anh san van dong that lam nen, phu gradient xanh de chu noi
+        // Anh nen xoay theo id tran (moi tran mot sac thai), phu gradient
+        // xanh de chu noi
         Positioned.fill(
-          child: Image.asset('assets/images/stadium_night.jpg',
-              fit: BoxFit.cover),
+          child: Image.asset(_heroImages[match.id % 3], fit: BoxFit.cover),
         ),
         const Positioned.fill(
           child: DecoratedBox(
@@ -193,17 +195,17 @@ class MatchDetailScreen extends StatelessWidget {
     return Column(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           child: Row(
             children: [
               Expanded(
                 flex: homePct,
-                child: Container(height: 14, color: const Color(0xFF3B82F6)),
+                child: Container(height: 16, color: const Color(0xFF3B82F6)),
               ),
               const SizedBox(width: 2),
               Expanded(
                 flex: 100 - homePct,
-                child: Container(height: 14, color: const Color(0xFFF97316)),
+                child: Container(height: 16, color: const Color(0xFFF97316)),
               ),
             ],
           ),
@@ -214,10 +216,14 @@ class MatchDetailScreen extends StatelessWidget {
           children: [
             Text(leftLabel,
                 style: const TextStyle(
-                    fontSize: 11, color: Color(0xFF93C5FD))),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF93C5FD))),
             Text(rightLabel,
                 style: const TextStyle(
-                    fontSize: 11, color: Color(0xFFFDBA74))),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFFDBA74))),
           ],
         ),
       ],
@@ -259,4 +265,72 @@ class MatchDetailScreen extends StatelessWidget {
       ],
     );
   }
+
+  /// Boc 1 khoi noi dung: tieu de accent + entrance so le theo [index].
+  Widget _section(int index, String title, Color color, Widget child) {
+    return EntranceSlide(
+      index: index,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [_AccentSectionTitle(title, color), child],
+      ),
+    );
+  }
+
+  /// The doi dau gan day: moi dong 1 icon xam + ty so in dam.
+  Widget _h2hCard(List<String> lines) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(children: [for (final l in lines) _h2hRow(l)]),
+        ),
+      );
+
+  /// Dong doi dau: icon + in dam phan ty so (tach theo 2 khoang trang, dung
+  /// dinh dang co dinh '{doi}  {ty so}  {doi}' tu MatchInsights).
+  Widget _h2hRow(String line) {
+    final p = line.split('  ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(children: [
+        const Icon(Icons.sports_score, size: 14, color: Colors.grey),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text.rich(TextSpan(style: const TextStyle(fontSize: 13),
+              children: [
+                TextSpan(text: '${p[0]}  '),
+                TextSpan(
+                    text: p[1],
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                TextSpan(text: '  ${p[2]}'),
+              ])),
+        ),
+      ]),
+    );
+  }
+}
+
+/// SectionTitle bien the: them thanh mau accent rieng cho tung muc, khong
+/// dung chung voi SectionTitle (widget dung chung o cac man khac).
+class _AccentSectionTitle extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _AccentSectionTitle(this.text, this.color);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 8),
+        child: Row(
+          children: [
+            Container(width: 4, height: 16, color: color),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
 }
