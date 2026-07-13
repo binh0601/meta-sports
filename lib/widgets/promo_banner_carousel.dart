@@ -21,18 +21,23 @@ class _Promo {
   final String subtitle;
   final IconData icon;
   final List<Color> colors;
-  const _Promo(this.title, this.subtitle, this.icon, this.colors);
+  final String image;
+  const _Promo(this.title, this.subtitle, this.icon, this.colors, this.image);
 }
 
 const List<_Promo> _promos = [
   _Promo('NẠP LẦN ĐẦU +100%', 'Nạp 500k nhận ngay 1 triệu trong ví',
-      Icons.bolt, [Color(0xFFB45309), Color(0xFF78350F)]),
+      Icons.bolt, [Color(0xFFB45309), Color(0xFF78350F)],
+      'assets/images/action_stadium_flare.jpg'),
   _Promo('CƯỢC XÂU THƯỞNG KHỦNG', 'Xâu 5 kèo trở lên — thưởng thêm 30%',
-      Icons.link, [Color(0xFF1D4ED8), Color(0xFF312E81)]),
+      Icons.link, [Color(0xFF1D4ED8), Color(0xFF312E81)],
+      'assets/images/player_volley.jpg'),
   _Promo('SIÊU KÈO CUỐI TUẦN', 'Odds tăng cực mạnh cho trận cầu tâm điểm',
-      Icons.local_fire_department, [Color(0xFFB91C1C), Color(0xFF7F1D1D)]),
+      Icons.local_fire_department, [Color(0xFFB91C1C), Color(0xFF7F1D1D)],
+      'assets/images/action_worldcup.jpg'),
   _Promo('MỜI BẠN NHẬN 50K', 'Giới thiệu bạn bè — cả hai cùng có thưởng',
-      Icons.card_giftcard, [Color(0xFF047857), Color(0xFF064E3B)]),
+      Icons.card_giftcard, [Color(0xFF047857), Color(0xFF064E3B)],
+      'assets/images/ball_closeup.jpg'),
 ];
 
 class _PromoBannerCarouselState extends State<PromoBannerCarousel>
@@ -83,7 +88,7 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel>
     return Column(
       children: [
         SizedBox(
-          height: 96,
+          height: 112,
           child: Stack(
             children: [
               PageView.builder(
@@ -96,35 +101,57 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel>
                 onTap: _open,
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(colors: p.colors),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(p.icon, size: 34, color: kGold),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.title,
-                                style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    letterSpacing: .5)),
-                            const SizedBox(height: 3),
-                            Text(p.subtitle,
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.white70)),
-                          ],
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(p.image,
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -.3)),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                p.colors.first.withValues(alpha: .95),
+                                p.colors.last.withValues(alpha: .55),
+                                p.colors.last.withValues(alpha: .15),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      const Icon(Icons.chevron_right, color: Colors.white54),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Icon(p.icon, size: 34, color: kGold),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(p.title,
+                                        style: displayStyle(size: 15)),
+                                    const SizedBox(height: 3),
+                                    Text(p.subtitle,
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.white70)),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right,
+                                  color: Colors.white54),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -175,7 +202,7 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel>
             for (var i = 0; i < _promos.length; i++)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == _page ? 14 : 6,
+                width: i == _page ? 16 : 6,
                 height: 6,
                 decoration: BoxDecoration(
                   color: i == _page ? kGold : Colors.white24,
