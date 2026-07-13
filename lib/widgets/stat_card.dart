@@ -1,36 +1,59 @@
 import 'package:flutter/material.dart';
 
-/// The hien thi 1 con so thong ke: nhan + gia tri, tuy chon mau.
+import '../theme/brand_colors.dart';
+
+/// The hien thi 1 con so thong ke: nhan + gia tri, tuy chon icon + mau accent.
 class StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
+  final IconData? icon;
+  final Color? accentColor;
 
   const StatCard({
     super.key,
     required this.label,
     required this.value,
     this.valueColor,
+    this.icon,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = accentColor ?? theme.colorScheme.primary;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: accent, width: 2)),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(label, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 4),
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: accent),
+              const SizedBox(height: 6),
+            ],
             Text(
               value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: valueColor,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: kDisplayFont,
+                fontSize: 18,
+                color: valueColor ?? theme.colorScheme.onSurface,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ),
@@ -39,20 +62,23 @@ class StatCard extends StatelessWidget {
   }
 }
 
-/// Hang cac StatCard gian deu.
+/// Hang cac StatCard gian deu, cao bang nhau du nhan dai ngan khac nhau.
 class StatRow extends StatelessWidget {
   final List<StatCard> cards;
   const StatRow({super.key, required this.cards});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final c in cards) ...[
-          Expanded(child: c),
-          if (c != cards.last) const SizedBox(width: 8),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final c in cards) ...[
+            Expanded(child: c),
+            if (c != cards.last) const SizedBox(width: 8),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

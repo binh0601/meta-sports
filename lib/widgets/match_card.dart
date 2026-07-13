@@ -15,49 +15,82 @@ class MatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return EntranceSlide(
       index: index,
-      child: Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .5)),
-      ),
-      child: ScaleTap(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => MatchDetailScreen(match: match)),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: .06)),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: match.played
+                ? const [Color(0xFF262B3D), Color(0xFF171923)]
+                : const [Color(0xFF1E2749), Color(0xFF141A33)],
+          ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  Expanded(child: _team(match.home, match.flagHome, false)),
-                  _centerBadge(context),
-                  Expanded(child: _team(match.away, match.flagAway, true)),
-                ],
+              Positioned(
+                right: -14,
+                bottom: -14,
+                child: Icon(Icons.sports_soccer,
+                    size: 96, color: Colors.white.withValues(alpha: .045)),
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                      child: OddsSelectButton(match: match, onHome: true)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: OddsSelectButton(match: match, onHome: false)),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Xem nhận định & phong độ ›',
-                style: TextStyle(fontSize: 10, color: scheme.outline),
+              ScaleTap(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => MatchDetailScreen(match: match)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                              child:
+                                  _team(match.home, match.flagHome, false)),
+                          _centerBadge(context),
+                          Expanded(
+                              child: _team(match.away, match.flagAway, true)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match, onHome: true)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text('VS',
+                                style: displayStyle(
+                                    size: 12,
+                                    color: kGold.withValues(alpha: .8))),
+                          ),
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match, onHome: false)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Xem nhận định & phong độ ›',
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.outline),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
-      ),
       ),
     );
   }
@@ -99,9 +132,15 @@ class MatchCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: match.played
-                  ? scheme.primaryContainer
-                  : scheme.surfaceContainerHighest,
+              color: match.played ? scheme.primaryContainer : null,
+              gradient: match.played
+                  ? null
+                  : LinearGradient(
+                      colors: [
+                        const Color(0xFF1D4ED8).withValues(alpha: .35),
+                        const Color(0xFF0B1026).withValues(alpha: .35),
+                      ],
+                    ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -200,14 +239,27 @@ class OddsSelectButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          gradient: selected ? kBrandGradient : null,
+          gradient: selected
+              ? kBrandGradient
+              : placed
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: .07),
+                        Colors.white.withValues(alpha: .03),
+                      ],
+                    ),
           color: selected
               ? null
               : placed
                   ? kGold.withValues(alpha: .14)
-                  : scheme.surfaceContainerHighest,
+                  : null,
           border: Border.all(
-            color: selected || placed ? kGold : scheme.outlineVariant,
+            color: selected || placed
+                ? kGold
+                : Colors.white.withValues(alpha: .1),
             width: selected || placed ? 1.4 : 1,
           ),
           boxShadow: selected
