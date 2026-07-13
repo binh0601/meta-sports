@@ -95,11 +95,18 @@ class PlayerProfileScreen extends StatelessWidget {
                           height: 48,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                              gradient: kBrandGradient,
+                              // Gradient xanh sang deu (khong tut ve den) de
+                              // chu trang tren nut Nap/Rut luon doc ro.
+                              gradient: const LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                              ),
                               borderRadius: BorderRadius.circular(12)),
                           child: FilledButton.icon(
                             style: FilledButton.styleFrom(
                                 backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12))),
