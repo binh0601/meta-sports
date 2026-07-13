@@ -185,4 +185,48 @@ void main() {
     expect(find.text('Mất'), findsOneWidget);
     expect(find.text('Ăn đủ'), findsNothing);
   });
+
+  testWidgets('tim keo: go cau hoi loc dung ten doi, xoa loc tra ve du tran',
+      (tester) async {
+    // ListView chi build cac MatchCard nam trong viewport/cache extent ->
+    // can man hinh cao de ca 8 tran deu duoc render (tuong tu test
+    // "chon cua chap" o tren).
+    await tester.binding.setSurfaceSize(const Size(800, 2600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    final totalBefore = find.byType(MatchCard).evaluate().length;
+    expect(totalBefore, 8);
+
+    // BetFinderBar la TextField duy nhat tren man san keo (2 TextField dang
+    // nhap da bi thay the sau khi dang nhap thanh cong).
+    // Dung ten doi cu the (Viet Nam luon co dung 1 tran/vong, du doi thu
+    // duoc boc tham ngau nhien) de dam bao loc con dung 1 tran, thay vi
+    // loc "cua nha" don thuan — sideHome mot minh luon dung tren canh nha
+    // cua MOI tran (khong co odds di kem) nen khong the tu giam so tran
+    // hien thi (da duoc BetQueryFilter.matchesSide xac nhan trong
+    // bet_query_filter_test.dart).
+    await tester.enterText(find.byType(TextField), 'kèo Việt Nam');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Xoá lọc'), findsOneWidget);
+    final totalAfterFilter = find.byType(MatchCard).evaluate().length;
+    expect(totalAfterFilter, lessThan(totalBefore));
+
+    await tester.tap(find.text('Xoá lọc'));
+    await tester.pump();
+    expect(find.byType(MatchCard).evaluate().length, totalBefore);
+    // MatchCard moi (danh sach vua doi) tu boc EntranceSlide, tao Future.delayed
+    // (toi da 12*40ms) cho hieu ung vao man so le — pump het de khong con
+    // timer treo khi ket thuc test.
+    await tester.pump(const Duration(milliseconds: 500));
+  });
 }

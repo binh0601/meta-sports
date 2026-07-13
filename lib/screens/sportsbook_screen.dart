@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../logic/bet_query_filter.dart';
 import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../theme/brand_colors.dart';
+import '../widgets/bet_finder_bar.dart';
 import '../widgets/bet_slip_drawer.dart';
 import '../widgets/bet_slip_panel.dart';
 import '../widgets/brand_crest.dart';
@@ -17,8 +19,15 @@ import '../widgets/promo_banner_carousel.dart';
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
 /// Dieu huong lich su / dang xuat nam o bottom nav cua PlayerHomeScreen.
-class SportsbookScreen extends StatelessWidget {
+class SportsbookScreen extends StatefulWidget {
   const SportsbookScreen({super.key});
+
+  @override
+  State<SportsbookScreen> createState() => _SportsbookScreenState();
+}
+
+class _SportsbookScreenState extends State<SportsbookScreen> {
+  BetQueryFilter _filter = const BetQueryFilter.empty();
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +37,13 @@ class SportsbookScreen extends StatelessWidget {
         final g = gameState;
         final wonThisRound =
             g.roundPlayed && g.lastResults.any((b) => b.won);
+        final visibleMatches = _filter.isEmpty
+            ? g.matches
+            : g.matches
+                .where((m) =>
+                    _filter.matchesSide(m, true, g.league) ||
+                    _filter.matchesSide(m, false, g.league))
+                .toList();
         return Scaffold(
           endDrawer: const BetSlipDrawer(),
           appBar: AppBar(
@@ -69,24 +85,41 @@ class SportsbookScreen extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Column(
                             children: [
-                              LeagueSwitcher(),
-                              SizedBox(height: 8),
-                              PromoBannerCarousel(),
+                              const LeagueSwitcher(),
+                              const SizedBox(height: 8),
+                              BetFinderBar(
+                                matches: g.matches,
+                                filter: _filter,
+                                onFilterChanged: (f) =>
+                                    setState(() => _filter = f),
+                              ),
+                              const SizedBox(height: 8),
+                              const PromoBannerCarousel(),
                             ],
                           ),
                         ),
                         HeroBanner(
                             roundNumber: g.roundNumber, league: g.league),
-                        for (var i = 0; i < g.matches.length; i++)
-                          MatchCard(
-                            key: ValueKey(g.matches[i].id),
-                            match: g.matches[i],
-                            index: i,
-                          ),
+                        if (visibleMatches.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              'Không tìm thấy kèo phù hợp, thử câu hỏi khác.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          )
+                        else
+                          for (var i = 0; i < visibleMatches.length; i++)
+                            MatchCard(
+                              key: ValueKey(visibleMatches[i].id),
+                              match: visibleMatches[i],
+                              index: i,
+                            ),
                       ],
                     ),
                   ),
