@@ -13,6 +13,7 @@ import '../widgets/league_switcher.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
 import '../widgets/promo_banner_carousel.dart';
+import 'live_score_screen.dart';
 
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
@@ -59,6 +60,14 @@ class SportsbookScreen extends StatelessWidget {
                 ),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.live_tv),
+                tooltip: 'Trực tiếp',
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const LiveScoreScreen())),
+              ),
+            ],
           ),
           body: Stack(
             children: [
