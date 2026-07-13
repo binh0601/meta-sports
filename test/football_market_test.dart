@@ -50,6 +50,29 @@ void main() {
         if (m.trueProbHome < 0.45) expect(m.homeHandicap, greaterThanOrEqualTo(0));
       }
     });
+
+    test('line co the dat toi ca banh (>=0.5) qua nhieu tran', () {
+      final rng = Random(11);
+      var reached = false;
+      for (var i = 0; i < 20 && !reached; i++) {
+        for (final m in generateRound(rng, i * 8)) {
+          if (m.homeHandicap.abs() >= 0.5) reached = true;
+        }
+      }
+      expect(reached, true);
+    });
+
+    test('hoa -> ca hai cua 1x2 deu thua', () {
+      final rng = Random(5);
+      final m = generateRound(rng, 1).first;
+      // ep ra hoa: da lai cho toi khi homeGoals == awayGoals
+      while (m.homeGoals != m.awayGoals || !m.played) {
+        m.play(rng);
+      }
+      expect(m.homeGoals, m.awayGoals);
+      expect(BetSelection(m, true).won, false);
+      expect(BetSelection(m, false).won, false);
+    });
   });
 
   group('Phieu cuoc', () {

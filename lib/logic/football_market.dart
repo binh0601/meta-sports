@@ -69,10 +69,10 @@ int _poisson(Random rng, double lambda) {
 /// Line chap suy tu xac suat that: chenh lech cang lon line cang cao,
 /// lam tron ve boi 0.25, doi manh la cua tren (line am ve phia ho).
 double _handicapLine(double p) {
-  final edge = p - 0.5;
-  final steps = (edge.abs() / 0.5 * 3).round(); // 0..~3
-  final mag = (steps * 0.25).clamp(0.0, 2.0);
-  return edge >= 0 ? -mag : mag;
+  final edge = p - 0.5;                 // -0.15..0.15
+  final rawMag = edge.abs() / 0.15;     // 0..1.0
+  final mag = ((rawMag / 0.25).round() * 0.25).clamp(0.0, 2.0); // boi 0.25
+  return edge >= 0 ? -mag : mag;        // home manh -> line am
 }
 
 /// Mot lua chon trong phieu cuoc: doi nao cua tran nao.
@@ -83,7 +83,10 @@ class BetSelection {
 
   double get odds => onHome ? match.oddsHome : match.oddsAway;
   String get teamName => onHome ? match.home : match.away;
-  bool get won => match.played && (onHome == match.homeWon);
+  bool get won =>
+      match.played &&
+      match.homeGoals != match.awayGoals &&
+      (onHome == match.homeWon);
 }
 
 /// Ket qua 1 chan cuoc sau khi thanh toan — du lieu thuan (khong tham

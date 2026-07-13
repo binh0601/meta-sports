@@ -201,7 +201,7 @@ class OddsSelectButton extends StatelessWidget {
     final placed = g.isBetPlaced(match, onHome); // da dat phieu, cho ket qua
 
     if (match.played) {
-      final isWinner = onHome == match.homeWon;
+      final isWinner = match.homeGoals != match.awayGoals && onHome == match.homeWon;
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
