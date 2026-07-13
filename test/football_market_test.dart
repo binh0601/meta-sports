@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:house_edge_demo/logic/betting_math.dart';
 import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/logic/game_state.dart';
+import 'package:house_edge_demo/logic/handicap_settlement.dart';
 
 void main() {
   group('Sinh keo bong da', () {
@@ -77,11 +78,33 @@ void main() {
 
   group('Phieu cuoc', () {
     test('LegResult serialize/parse doi xung (luu Firestore)', () {
-      const leg = LegResult('Việt Nam', 1.85, true);
+      const leg = LegResult('Việt Nam', 1.85, true,
+          payoutRatio: 1.85, market: MarketType.match1x2, status: SettleStatus.win);
       final back = LegResult.fromMap(leg.toMap());
       expect(back.teamName, 'Việt Nam');
       expect(back.odds, 1.85);
       expect(back.won, true);
+      expect(back.payoutRatio, 1.85);
+      expect(back.market, MarketType.match1x2);
+      expect(back.status, SettleStatus.win);
+    });
+
+    test('LegResult.fromMap tuong thich nguoc: doc cu chi co team/odds/won',
+        () {
+      final back = LegResult.fromMap(
+          {'team': 'Thái Lan', 'odds': 2.4, 'won': true});
+      expect(back.teamName, 'Thái Lan');
+      expect(back.odds, 2.4);
+      expect(back.won, true);
+      expect(back.payoutRatio, 2.4); // suy tu won -> odds
+      expect(back.market, MarketType.match1x2);
+      expect(back.status, SettleStatus.win);
+
+      final lost = LegResult.fromMap(
+          {'team': 'Nhật Bản', 'odds': 1.9, 'won': false});
+      expect(lost.payoutRatio, 0.0);
+      expect(lost.status, SettleStatus.lose);
+      expect(lost.market, MarketType.match1x2);
     });
 
     test('BetSlip.restored: totalOdds/legs tinh tu legResults', () {

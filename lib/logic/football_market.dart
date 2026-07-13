@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'handicap_settlement.dart';
+
 /// Mot tran bong 2 cua (thang/thua, bo qua hoa cho don gian).
 /// Odds duoc dinh gia tu xac suat that roi nhan 0.95 -> overround ~5,26%
 /// dung nhu tai lieu "Toan hoc nha cai".
@@ -75,13 +77,23 @@ double _handicapLine(double p) {
   return edge >= 0 ? -mag : mag;        // home manh -> line am
 }
 
-/// Mot lua chon trong phieu cuoc: doi nao cua tran nao.
+/// Loai keo: 1x2 (thang/thua goc) hoac chap chau A (Asian Handicap).
+enum MarketType { match1x2, handicap }
+
+/// Mot lua chon trong phieu cuoc: doi nao cua tran nao, thi truong nao.
 class BetSelection {
   final FootballMatch match;
   final bool onHome;
-  BetSelection(this.match, this.onHome);
+  final MarketType market;
+  BetSelection(this.match, this.onHome, {this.market = MarketType.match1x2});
 
-  double get odds => onHome ? match.oddsHome : match.oddsAway;
+  /// Line chap theo goc nhin cua lua chon nay (chi co y nghia khi
+  /// market == handicap).
+  double get line => onHome ? match.homeHandicap : -match.homeHandicap;
+
+  double get odds => market == MarketType.handicap
+      ? (onHome ? match.oddsHdpHome : match.oddsHdpAway)
+      : (onHome ? match.oddsHome : match.oddsAway);
   String get teamName => onHome ? match.home : match.away;
   bool get won =>
       match.played &&
@@ -95,13 +107,52 @@ class LegResult {
   final String teamName;
   final double odds;
   final bool won;
-  const LegResult(this.teamName, this.odds, this.won);
+  final double payoutRatio;
+  final MarketType market;
+  final SettleStatus status;
 
-  Map<String, dynamic> toMap() =>
-      {'team': teamName, 'odds': odds, 'won': won};
+  const LegResult(
+    this.teamName,
+    this.odds,
+    this.won, {
+    this.payoutRatio = 0.0,
+    this.market = MarketType.match1x2,
+    this.status = SettleStatus.lose,
+  });
 
-  factory LegResult.fromMap(Map<String, dynamic> m) => LegResult(
-      m['team'] as String, (m['odds'] as num).toDouble(), m['won'] as bool);
+  Map<String, dynamic> toMap() => {
+        'team': teamName,
+        'odds': odds,
+        'won': won,
+        'payoutRatio': payoutRatio,
+        'market': market.name,
+        'status': status.name,
+      };
+
+  /// Doc cu (truoc B3) chi co team/odds/won -> suy payoutRatio/status tu won,
+  /// market mac dinh 1x2. Doc moi doc thang field da luu.
+  factory LegResult.fromMap(Map<String, dynamic> m) {
+    final won = m['won'] as bool;
+    final odds = (m['odds'] as num).toDouble();
+    final payoutRatio =
+        (m['payoutRatio'] as num?)?.toDouble() ?? (won ? odds : 0.0);
+    final market = MarketType.values.firstWhere(
+      (e) => e.name == m['market'],
+      orElse: () => MarketType.match1x2,
+    );
+    final status = SettleStatus.values.firstWhere(
+      (e) => e.name == m['status'],
+      orElse: () => won ? SettleStatus.win : SettleStatus.lose,
+    );
+    return LegResult(
+      m['team'] as String,
+      odds,
+      won,
+      payoutRatio: payoutRatio,
+      market: market,
+      status: status,
+    );
+  }
 }
 
 /// Phieu cuoc: 1 lua chon = keo don, nhieu lua chon = keo xien
@@ -146,7 +197,16 @@ class BetSlip {
   /// Chot ket qua tung chan tu selections (goi khi thanh toan).
   void captureLegResults() {
     legResults = [
-      for (final s in selections) LegResult(s.teamName, s.odds, s.won)
+      for (final s in selections)
+        LegResult(
+          s.teamName,
+          s.odds,
+          s.won,
+          payoutRatio: s.won ? s.odds : 0.0,
+          market: s.market,
+          status: s.won ? SettleStatus.win : SettleStatus.lose,
+        ),
+      // leg handicap se duoc B4 tinh lai theo settleHandicap
     ];
   }
 }
