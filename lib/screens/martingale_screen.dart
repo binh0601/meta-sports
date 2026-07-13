@@ -16,12 +16,12 @@ class MartingaleScreen extends StatefulWidget {
 class _MartingaleScreenState extends State<MartingaleScreen> {
   final _rng = Random();
   final List<String> _log = [];
-  double _bankroll = 10000; // 10 trieu (don vi k)
+  double _bankroll = 10000000; // 10 triệu VND
   int _cycles = 0;
   bool _busted = false;
 
   void _reset() => setState(() {
-        _bankroll = 10000;
+        _bankroll = 10000000;
         _cycles = 0;
         _busted = false;
         _log.clear();
@@ -30,7 +30,7 @@ class _MartingaleScreenState extends State<MartingaleScreen> {
   void _run(int cycles) {
     setState(() {
       for (var i = 0; i < cycles && !_busted; i++) {
-        final r = BettingMath.martingaleCycle(_bankroll, 100, _rng);
+        final r = BettingMath.martingaleCycle(_bankroll, 100000, _rng);
         _cycles++;
         if (r.busted) {
           _busted = true;
@@ -107,7 +107,7 @@ class _MartingaleScreenState extends State<MartingaleScreen> {
               label: 'Số dư',
               value: fmtK(_bankroll),
               valueColor:
-                  _bankroll >= 10000 ? Colors.lightGreen : scheme.error,
+                  _bankroll >= 10000000 ? Colors.lightGreen : scheme.error,
             ),
             StatCard(label: 'Chu kỳ đã chạy', value: '$_cycles'),
             StatCard(

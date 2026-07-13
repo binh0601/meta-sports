@@ -24,44 +24,44 @@ class BettingMath {
   }) =>
       p * stake * (odds - 1) - (1 - p) * stake;
 
-  /// Lai nha cai (k) khi [a] / 10 nguoi dat cua A, moi nguoi 100k, odds 1.90.
-  /// Neu A ra: thu (10 - a) * 100, chi a * 90  =>  1000 - 190a.
-  static double bookProfitIfAWins(int a) => 1000 - 190.0 * a;
+  /// Lai nha cai khi [a] / 10 nguoi dat cua A, moi nguoi 100k VND, odds 1.90.
+  /// Neu A ra: thu (10 - a) * 100k, chi a * 90k  =>  1000k - 190k * a.
+  static double bookProfitIfAWins(int a) => 1000000 - 190000.0 * a;
 
-  /// Neu B ra: thu a * 100, chi (10 - a) * 90  =>  190a - 900.
-  static double bookProfitIfBWins(int a) => 190.0 * a - 900;
+  /// Neu B ra: thu a * 100k, chi (10 - a) * 90k  =>  190k * a - 900k.
+  static double bookProfitIfBWins(int a) => 190000.0 * a - 900000;
 
-  /// Luc 1 - bien nha cai keo thang: 5k moi van, cong don tuyen tinh.
-  static double houseDrift(num n) => 5.0 * n;
+  /// Luc 1 - bien nha cai keo thang: 5k VND moi van, cong don tuyen tinh.
+  static double houseDrift(num n) => 5000.0 * n;
 
-  /// Luc 2 - dao dong may rui: do lech chuan 95k moi van, lon theo can n.
-  static double luckSwing(num n) => 95.0 * sqrt(n);
+  /// Luc 2 - dao dong may rui: do lech chuan 95k VND moi van, lon theo can n.
+  static double luckSwing(num n) => 95000.0 * sqrt(n);
 
-  /// Diem giao 2 luc: 5n = 95*sqrt(n)  =>  n = 361.
+  /// Diem giao 2 luc: 5000n = 95000*sqrt(n)  =>  n = 361.
   static const int crossoverGames = 361;
 
   /// Xap xi % nguoi choi con lai sau n van: P(Z > sqrt(n) / 19).
   static double winnersShare(num n) => 1 - _phi(sqrt(n) / 19);
 
-  /// Martingale voi odds 1.90: net sau k lan thua lien tiep roi thang
-  /// = 90 * 2^k - 100 * (2^k - 1) = 100 - 10 * 2^k (k tu lan thua thu 4 la am).
-  static double martingaleNet(int k) => 100 - 10.0 * pow(2, k);
+  /// Martingale voi odds 1.90: net sau k lan thua lien tiep roi thang (cuoc goc 100k VND)
+  /// = 90k * 2^k - 100k * (2^k - 1) = 100k - 10k * 2^k (k tu lan thua thu 4 la am).
+  static double martingaleNet(int k) => 100000 - 10000.0 * pow(2, k);
 
   /// Bien nha cai khi ghep k keo, moi keo giu lai 95% gia tri: 1 - 0.95^k.
   static double parlayMargin(int k) => 1 - pow(0.95, k).toDouble();
 
-  /// Mo phong so du (k) qua [n] van cuoc 100k, odds 1.90, p = 0.5.
+  /// Mo phong so du (VND) qua [n] van cuoc 100k VND, odds 1.90, p = 0.5.
   /// Tra ve duong di so du, bat dau tu 0.
   static List<double> simulateBankroll(int n, Random rng) {
     final path = List<double>.filled(n + 1, 0);
     for (var i = 1; i <= n; i++) {
-      path[i] = path[i - 1] + (rng.nextBool() ? 90 : -100);
+      path[i] = path[i - 1] + (rng.nextBool() ? 90000 : -100000);
     }
     return path;
   }
 
   /// Mo phong 1 chu ky Martingale: gap doi den khi thang hoac chay tui.
-  /// Tra ve so du moi (k). [bankroll] va [baseStake] tinh bang k.
+  /// Tra ve so du moi (VND). [bankroll] va [baseStake] tinh bang VND.
   static ({double bankroll, int losses, bool busted}) martingaleCycle(
       double bankroll, double baseStake, Random rng) {
     var stake = baseStake;
@@ -96,26 +96,27 @@ class BettingMath {
   }
 }
 
-/// Dinh dang "nghin dong" gon: 810 -> "+810k", -520 -> "-520k".
+/// Dinh dang "VND" gon: 810000 -> "+810k", -520000 -> "-520k".
 String fmtK(double v) {
   final sign = v > 0 ? '+' : '';
-  if (v.abs() >= 1000) {
-    final m = v / 1000;
-    return '$sign${m.toStringAsFixed(m == m.roundToDouble() ? 0 : 1)} trieu';
+  if (v.abs() >= 1000000) {
+    final m = v / 1000000;
+    return '$sign${m.toStringAsFixed(m == m.roundToDouble() ? 0 : 1)} triệu';
   }
-  return '$sign${v.round()}k';
+  return '$sign${(v / 1000).round()}k';
 }
 
-/// Dinh dang so du / tien cuoc, khong keo dau "+": 9900 -> "9,9 trieu".
+/// Dinh dang so du / tien cuoc, khong keo dau "+": 9900000 -> "9,9 triệu".
 String fmtMoney(double v) {
-  if (v.abs() >= 1000) {
-    final m = v / 1000;
+  if (v.abs() >= 1000000) {
+    final m = v / 1000000;
     final s = m.toStringAsFixed(m == m.roundToDouble() ? 0 : 2);
     return '${s.replaceAll('.', ',')} triệu';
   }
-  return '${v.round()}k';
+  return '${(v / 1000).round()}k';
 }
 
 /// Dinh dang phan tram: 0.0526 -> "5,26%".
 String fmtPct(double v, [int digits = 2]) =>
     '${(v * 100).toStringAsFixed(digits).replaceAll('.', ',')}%';
+

@@ -21,7 +21,7 @@ class _ParlayScreenState extends State<ParlayScreen> {
     final scheme = Theme.of(context).colorScheme;
     final margin = BettingMath.parlayMargin(_k);
     // Cuoc 100k, k keo odds 1.90: tien nhan neu trung het & xac suat trung.
-    final payout = 100 * pow(1.9, _k).toDouble();
+    final payout = 100000 * pow(1.9, _k).toDouble();
     final winProb = pow(0.5, _k).toDouble();
 
     return Scaffold(

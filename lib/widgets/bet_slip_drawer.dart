@@ -17,7 +17,7 @@ class BetSlipDrawer extends StatefulWidget {
 }
 
 class _BetSlipDrawerState extends State<BetSlipDrawer> {
-  static const List<double> _suggestions = [50, 100, 200, 500, 1000];
+  static const List<double> _suggestions = [50000, 100000, 200000, 500000, 1000000];
   late final TextEditingController _stakeCtrl =
       TextEditingController(text: gameState.stake.round().toString());
 
