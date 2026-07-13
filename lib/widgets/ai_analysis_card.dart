@@ -85,8 +85,8 @@ class _AiAnalysisCardState extends State<AiAnalysisCard> {
   }
 }
 
-/// Typewriter effect: animates text reveal over ~700ms.
-/// Respects disableAnimations setting (shows full text immediately if disabled).
+/// Hieu ung go may: chu hien dan trong ~700ms.
+/// Ton trong disableAnimations (hien full text ngay khi tat animation).
 class _TypewriterText extends StatelessWidget {
   final String text;
 
@@ -94,7 +94,7 @@ class _TypewriterText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If animations are disabled, show full text immediately
+    // Tat animation -> hien nguyen doan ngay
     if (MediaQuery.of(context).disableAnimations) {
       return Text(text,
           style: const TextStyle(fontSize: 13, height: 1.5));
