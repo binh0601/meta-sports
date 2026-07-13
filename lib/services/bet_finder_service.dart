@@ -58,12 +58,21 @@ class BetFinderService {
             jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
         final content =
             (data['choices'] as List).first['message']['content'] as String;
-        return filterFromJson(jsonDecode(content) as Map<String, dynamic>);
+        final stripped = stripCodeFence(content);
+        return filterFromJson(jsonDecode(stripped) as Map<String, dynamic>);
       }
     } catch (_) {
       debugPrint('Bet finder Groq loi, dung parser noi bo');
     }
     return BetQueryParser.parse(query, teamNames);
+  }
+
+  /// Strip markdown code fences (```json ... ```) from Groq JSON responses.
+  /// LLMs sometimes wrap JSON in fences despite instructions not to.
+  static String stripCodeFence(String s) {
+    final trimmed = s.trim();
+    final fenced = RegExp(r'^```(?:json)?\s*([\s\S]*?)\s*```$').firstMatch(trimmed);
+    return fenced != null ? fenced.group(1)! : trimmed;
   }
 
   /// Chuyen JSON (tu Groq) thanh BetQueryFilter. Tach rieng khoi [find] de
@@ -73,8 +82,10 @@ class BetFinderService {
     if (json['league'] == 'asianCup') league = League.asianCup;
     if (json['league'] == 'worldCup') league = League.worldCup;
     return BetQueryFilter(
-      teamKeywords:
-          (json['teamKeywords'] as List?)?.cast<String>() ?? const [],
+      teamKeywords: (json['teamKeywords'] as List?)
+              ?.whereType<String>()
+              .toList() ??
+          const [],
       sideHome: json['sideHome'] as bool?,
       maxOdds: (json['maxOdds'] as num?)?.toDouble(),
       minOdds: (json['minOdds'] as num?)?.toDouble(),

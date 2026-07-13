@@ -5,6 +5,33 @@ import 'package:house_edge_demo/logic/football_market.dart';
 import 'package:house_edge_demo/services/bet_finder_service.dart';
 
 void main() {
+  group('BetFinderService._stripCodeFence', () {
+    test('strip markdown fence ```json ... ```', () {
+      const json = '```json\n{"key": "value"}\n```';
+      final result = BetFinderService.stripCodeFence(json);
+      expect(result, '{"key": "value"}');
+    });
+
+    test('strip fence without json language tag', () {
+      const json = '```\n{"key": "value"}\n```';
+      final result = BetFinderService.stripCodeFence(json);
+      expect(result, '{"key": "value"}');
+    });
+
+    test('no fence -> return trimmed input', () {
+      const json = '{"key": "value"}';
+      final result = BetFinderService.stripCodeFence(json);
+      expect(result, '{"key": "value"}');
+    });
+
+    test('preserve whitespace inside fence', () {
+      const json = '```json\n{\n  "key": "value"\n}\n```';
+      final result = BetFinderService.stripCodeFence(json);
+      expect(result.contains('\n'), true);
+      expect(result.contains('  '), true);
+    });
+  });
+
   group('BetFinderService.filterFromJson', () {
     test('parse day du field', () {
       final f = BetFinderService.filterFromJson({
@@ -24,6 +51,20 @@ void main() {
     test('thieu field -> mac dinh rong/null', () {
       final f = BetFinderService.filterFromJson({});
       expect(f.isEmpty, true);
+    });
+
+    test('teamKeywords with mixed types -> keep only strings', () {
+      final f = BetFinderService.filterFromJson({
+        'teamKeywords': ['Việt Nam', 42, null, 'Thái Lan', false],
+      });
+      expect(f.teamKeywords, ['Việt Nam', 'Thái Lan']);
+    });
+
+    test('teamKeywords empty list with non-strings -> return empty', () {
+      final f = BetFinderService.filterFromJson({
+        'teamKeywords': [42, null, false],
+      });
+      expect(f.teamKeywords, isEmpty);
     });
   });
 
