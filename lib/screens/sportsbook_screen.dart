@@ -8,7 +8,7 @@ import '../widgets/brand_crest.dart';
 import '../widgets/coin_burst.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
-
+import 'live_score_screen.dart';
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
 /// Dieu huong lich su / dang xuat nam o bottom nav cua PlayerHomeScreen.
@@ -39,6 +39,14 @@ class SportsbookScreen extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.live_tv),
+                tooltip: 'Trực tiếp',
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const LiveScoreScreen())),
+              ),
+            ],
           ),
           body: Stack(
             children: [

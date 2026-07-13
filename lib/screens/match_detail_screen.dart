@@ -65,6 +65,20 @@ class MatchDetailScreen extends StatelessWidget {
                                       Theme.of(context).colorScheme.outline),
                             ),
                           ),
+                          _AccentSectionTitle('Kèo chấp', const Color(0xFFEAB308)),
+                          Row(children: [
+                            Expanded(
+                                child: OddsSelectButton(
+                                    match: match,
+                                    onHome: true,
+                                    market: MarketType.handicap)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: OddsSelectButton(
+                                    match: match,
+                                    onHome: false,
+                                    market: MarketType.handicap)),
+                          ]),
                         ],
                       ),
                     ),
