@@ -250,4 +250,19 @@ void main() {
     expect(btn1x2, isNotEmpty);
     expect(find.textContaining('edge'), findsWidgets);
   });
+
+  testWidgets('bam icon info hien dialog giai thich Edge', (tester) async {
+    await tester.pumpWidget(const HouseEdgeApp(showSplash: false));
+    await tester.enterText(find.byType(TextField).at(0), 'demo');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('ĐĂNG NHẬP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.tap(find.byIcon(Icons.info_outline));
+    await tester.pump();
+    expect(find.text('Về chỉ số Edge'), findsOneWidget);
+    await tester.tap(find.text('Đã hiểu'));
+    await tester.pump();
+  });
 }

@@ -75,6 +75,12 @@ class _SportsbookScreenState extends State<SportsbookScreen> {
                 ),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => _showEdgeInfo(context),
+              ),
+            ],
           ),
           body: Stack(
             children: [
@@ -136,6 +142,25 @@ class _SportsbookScreenState extends State<SportsbookScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showEdgeInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Về chỉ số Edge'),
+        content: const Text(
+            'Edge tính từ chênh lệch giữa ước tính chuyên gia và tỷ lệ '
+            'ngầm của kèo — không phải lợi nhuận thật. Biên nhà cái '
+            '(~5%) vẫn luôn trừ vào kỳ vọng dài hạn, dù Edge dương hay âm.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
+      ),
     );
   }
 
