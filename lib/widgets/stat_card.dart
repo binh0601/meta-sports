@@ -48,12 +48,19 @@ class StatCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
+            // Chua san 2 dong cho nhan de moi the cao noi dung bang nhau
+            // -> gia tri + icon thang hang ngang du nhan dai ngan khac nhau.
+            SizedBox(
+              height: 30,
+              child: Center(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
             ),
           ],
         ),

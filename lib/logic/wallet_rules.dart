@@ -3,11 +3,11 @@ import 'dart:math';
 import 'betting_math.dart';
 
 /// Quy tac rollover cua nha cai: tien duoc cap/nap phai duoc dat cuoc
-/// du [rolloverMultiplier] lan truoc khi cho rut — mo phong dieu khoan
+/// it nhat 1 lan tong tien duoc cap/nap truoc khi cho rut — mo phong dieu khoan
 /// bonus that (giu chan nguoi choi nop tien cho house edge nhieu vong).
 /// Thuan Dart, khong import Flutter — de unit test.
 class WalletRules {
-  static const int rolloverMultiplier = 5;
+  static const int rolloverMultiplier = 1;
 
   double totalFunded; // tong tien duoc cap + da nap (k)
   double totalWagered; // tong tien da dat cuoc (k)

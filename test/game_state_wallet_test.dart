@@ -7,7 +7,7 @@ import 'package:house_edge_demo/logic/wallet_rules.dart';
 // NotificationService), dung GameState() moi cho tung test.
 void main() {
   group('GameState vi — nap tien', () {
-    test('deposit(200): balance +200, totalFunded +200, requirement +1000',
+    test('deposit(200): balance +200, totalFunded +200, requirement +200',
         () {
       final g = GameState();
       final balanceBefore = g.balance;
