@@ -26,7 +26,28 @@ void main() {
       if (m.homeWon) {
         expect(m.homeGoals, greaterThan(m.awayGoals));
       } else {
-        expect(m.awayGoals, greaterThan(m.homeGoals));
+        expect(m.awayGoals, greaterThanOrEqualTo(m.homeGoals));
+      }
+    });
+
+    test('play co the ra hoa qua nhieu lan', () {
+      final rng = Random(7);
+      var draws = 0;
+      for (var i = 0; i < 400; i++) {
+        final m = generateRound(rng, i * 8).first..play(rng);
+        if (m.homeGoals == m.awayGoals) draws++;
+      }
+      expect(draws, greaterThan(40)); // >~10% hoa
+      expect(draws, lessThan(200));   // <50%
+    });
+
+    test('handicap line la boi cua 0.25 va co dau theo doi manh', () {
+      final rng = Random(3);
+      for (final m in generateRound(rng, 1)) {
+        expect((m.homeHandicap * 4) % 1, 0); // boi 0.25
+        // doi xac suat cao hon la cua tren (line am ve phia ho)
+        if (m.trueProbHome > 0.55) expect(m.homeHandicap, lessThanOrEqualTo(0));
+        if (m.trueProbHome < 0.45) expect(m.homeHandicap, greaterThanOrEqualTo(0));
       }
     });
   });

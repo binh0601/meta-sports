@@ -13,6 +13,10 @@ class FootballMatch {
   final double trueProbHome; // xac suat that - nguoi choi KHONG nhin thay
   final double oddsHome;
   final double oddsAway;
+  final double homeHandicap; // line chap, goc nhin home (am = home cua tren)
+  final double oddsHdpHome;
+  final double oddsHdpAway;
+  final double oddsDraw;
 
   bool played = false;
   bool homeWon = false;
@@ -29,19 +33,46 @@ class FootballMatch {
     required this.trueProbHome,
     required this.oddsHome,
     required this.oddsAway,
+    required this.homeHandicap,
+    required this.oddsHdpHome,
+    required this.oddsHdpAway,
+    required this.oddsDraw,
   });
 
   String get score => played ? '$homeGoals - $awayGoals' : kickoff;
 
-  /// Da tran nay: ket qua rut tu xac suat that, ty so chi de trang tri.
+  /// Da tran nay: ket qua rut tu xac suat that qua phan phoi Poisson,
+  /// ty so co the hoa vi 2 doi gan nhau ve suc manh.
   void play(Random rng) {
     played = true;
-    homeWon = rng.nextDouble() < trueProbHome;
-    final winnerGoals = 1 + rng.nextInt(3);
-    final loserGoals = rng.nextInt(winnerGoals);
-    homeGoals = homeWon ? winnerGoals : loserGoals;
-    awayGoals = homeWon ? loserGoals : winnerGoals;
+    // Ky vong ban thang suy tu trueProbHome; 2 doi gan nhau -> co hoa thuc te.
+    final lambdaHome = 0.8 + trueProbHome * 1.6;
+    final lambdaAway = 0.8 + (1 - trueProbHome) * 1.6;
+    homeGoals = _poisson(rng, lambdaHome).clamp(0, 5);
+    awayGoals = _poisson(rng, lambdaAway).clamp(0, 5);
+    homeWon = homeGoals > awayGoals; // hoa -> false (giu tuong thich cu)
   }
+}
+
+/// Sinh so ban thang theo phan phoi Poisson (thuat toan Knuth).
+int _poisson(Random rng, double lambda) {
+  final l = exp(-lambda);
+  var k = 0;
+  var p = 1.0;
+  do {
+    k++;
+    p *= rng.nextDouble();
+  } while (p > l);
+  return k - 1;
+}
+
+/// Line chap suy tu xac suat that: chenh lech cang lon line cang cao,
+/// lam tron ve boi 0.25, doi manh la cua tren (line am ve phia ho).
+double _handicapLine(double p) {
+  final edge = p - 0.5;
+  final steps = (edge.abs() / 0.5 * 3).round(); // 0..~3
+  final mag = (steps * 0.25).clamp(0.0, 2.0);
+  return edge >= 0 ? -mag : mag;
 }
 
 /// Mot lua chon trong phieu cuoc: doi nao cua tran nao.
@@ -167,6 +198,7 @@ List<FootballMatch> generateRound(Random rng, int startId, {League league = Leag
     final p = 0.35 + rng.nextDouble() * 0.30; // xac suat that 35%..65%
     final home = teams[i * 2];
     final away = teams[i * 2 + 1];
+    final hdp = _handicapLine(p);
     return FootballMatch(
       id: startId + i,
       home: home.$1,
@@ -177,6 +209,10 @@ List<FootballMatch> generateRound(Random rng, int startId, {League league = Leag
       trueProbHome: p,
       oddsHome: round2(0.95 / p),
       oddsAway: round2(0.95 / (1 - p)),
+      homeHandicap: hdp,
+      oddsHdpHome: round2(1.90 + (rng.nextDouble() - .5) * .1),
+      oddsHdpAway: round2(1.90 + (rng.nextDouble() - .5) * .1),
+      oddsDraw: round2(0.95 / 0.26), // pDraw ~26%
     );
   });
 }
