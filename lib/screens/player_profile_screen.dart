@@ -100,6 +100,7 @@ class PlayerProfileScreen extends StatelessWidget {
                           child: FilledButton.icon(
                             style: FilledButton.styleFrom(
                                 backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12))),
