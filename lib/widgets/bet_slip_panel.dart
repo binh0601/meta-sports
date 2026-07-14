@@ -25,7 +25,11 @@ class BetSlipPanel extends StatelessWidget {
             color: scheme.surfaceContainerHigh,
             border: Border(top: BorderSide(color: scheme.outlineVariant)),
           ),
-          child: g.roundPlayed ? _results(context, g) : _summary(context, g),
+          child: g.roundPlayed
+              ? _results(context, g)
+              : g.roundInPlay
+                  ? _live(context, g)
+                  : _summary(context, g),
         );
       },
     );
@@ -65,11 +69,27 @@ class BetSlipPanel extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 icon: const SpinningBallIcon(size: 16),
                 label: Text('Đá vòng ${g.roundNumber}'),
-                onPressed: () => g.playRound(),
+                onPressed: () => g.kickoffRound(),
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  /// Dang da: hien phut chay + so phieu dang cho, khoa dat cuoc.
+  Widget _live(BuildContext context, GameState g) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        const PulseDot(Colors.redAccent),
+        const SizedBox(width: 8),
+        Text("Đang đá — phút ${g.liveMinute}'",
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        const Spacer(),
+        Text('${g.pending.length} phiếu chờ kết quả',
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
       ],
     );
   }

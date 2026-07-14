@@ -78,8 +78,7 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
       _video = null;
     });
     await old?.dispose();
-    final c = VideoPlayerController.networkUrl(
-        Uri.parse(kLiveTvChannels[i].url));
+    final c = VideoPlayerController.asset(kLiveTvChannels[i].asset);
     try {
       await c.initialize();
       await c.setLooping(true);

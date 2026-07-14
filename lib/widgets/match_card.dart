@@ -144,7 +144,11 @@ class MatchCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              match.score,
+              match.played
+                  ? '${match.homeGoals} - ${match.awayGoals}'
+                  : match.inPlay
+                      ? '${match.liveHomeGoals} - ${match.liveAwayGoals}'
+                      : match.kickoff,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -164,20 +168,36 @@ class MatchCard extends StatelessWidget {
                       letterSpacing: 1,
                       color: Colors.lightGreen),
                 )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    PulseDot(Colors.lightGreen),
-                    SizedBox(width: 4),
-                    Text(
-                      'MỞ CƯỢC',
-                      style: TextStyle(
-                          fontSize: 9,
-                          letterSpacing: 1,
-                          color: Colors.lightGreen),
+              : match.inPlay
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const PulseDot(Colors.redAccent),
+                        const SizedBox(width: 4),
+                        Text(
+                          "LIVE ${match.liveMinute}'",
+                          style: const TextStyle(
+                              fontSize: 9,
+                              letterSpacing: 1,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        PulseDot(Colors.lightGreen),
+                        SizedBox(width: 4),
+                        Text(
+                          'MỞ CƯỢC',
+                          style: TextStyle(
+                              fontSize: 9,
+                              letterSpacing: 1,
+                              color: Colors.lightGreen),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
         ],
       ),
     );
@@ -210,6 +230,26 @@ class OddsSelectButton extends StatelessWidget {
     final selected = g.isSelected(match, onHome, market: market);
     final placed =
         g.isBetPlaced(match, onHome, market: market); // da dat phieu, cho ket qua
+
+    // Dang da: dong cua cuoc, hien lai cua + odds mau trung tinh.
+    if (match.inPlay) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: scheme.surfaceContainerHighest,
+        ),
+        child: Column(
+          children: [
+            Text(label,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: scheme.outline)),
+            Text('@${odds.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 11, color: scheme.outline)),
+          ],
+        ),
+      );
+    }
 
     if (match.played) {
       if (isHdp) {

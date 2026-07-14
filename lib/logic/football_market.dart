@@ -31,6 +31,12 @@ class FootballMatch {
   int homeGoals = 0;
   int awayGoals = 0;
 
+  // Live in-play: tran dang da — phut chay, ban thang lo dan theo thoi gian.
+  bool inPlay = false;
+  int liveMinute = 0;
+  List<int> _goalMinsHome = const [];
+  List<int> _goalMinsAway = const [];
+
   FootballMatch({
     required this.id,
     required this.home,
@@ -80,6 +86,41 @@ class FootballMatch {
     awayGoals = _poisson(rng, lambdaAway).clamp(0, 5);
     homeWon = homeGoals > awayGoals; // hoa -> false (giu tuong thich cu)
   }
+
+  /// Bat dau da (in-play): chot ket qua cuoi nhung CHUA danh dau played,
+  /// rai ngau nhien phut ghi ban de ty so lo dan khi liveMinute tang.
+  void startLive(Random rng) {
+    final lambdaHome = 0.8 + trueProbHome * 1.6;
+    final lambdaAway = 0.8 + (1 - trueProbHome) * 1.6;
+    homeGoals = _poisson(rng, lambdaHome).clamp(0, 5);
+    awayGoals = _poisson(rng, lambdaAway).clamp(0, 5);
+    homeWon = homeGoals > awayGoals;
+    _goalMinsHome = _spreadGoalMinutes(rng, homeGoals);
+    _goalMinsAway = _spreadGoalMinutes(rng, awayGoals);
+    liveMinute = 0;
+    inPlay = true;
+    played = false;
+  }
+
+  /// So ban da lo den [liveMinute] hien tai (dung khi dang da).
+  int get liveHomeGoals => _goalMinsHome.where((m) => m <= liveMinute).length;
+  int get liveAwayGoals => _goalMinsAway.where((m) => m <= liveMinute).length;
+
+  /// Ket thuc tran: chot played, hien du ty so cuoi.
+  void finish() {
+    inPlay = false;
+    played = true;
+    liveMinute = 90;
+  }
+}
+
+/// Rai [n] ban thang vao cac phut ngau nhien 1..89 (tang dan).
+List<int> _spreadGoalMinutes(Random rng, int n) {
+  final s = <int>{};
+  while (s.length < n) {
+    s.add(1 + rng.nextInt(89));
+  }
+  return s.toList()..sort();
 }
 
 /// Sinh so ban thang theo phan phoi Poisson (thuat toan Knuth).

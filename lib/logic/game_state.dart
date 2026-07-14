@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,6 +22,9 @@ class GameState extends ChangeNotifier {
   double balance = startBalance;
   int roundNumber = 1;
   bool roundPlayed = false;
+  bool roundInPlay = false; // vong dang da live (phut dang chay)
+  int liveMinute = 0; // phut thi dau hien tai khi dang da
+  Timer? _liveTimer;
   List<FootballMatch> matches = [];
   final WalletRules wallet = WalletRules(totalFunded: startBalance);
   bool isDemoWallet = false; // true khi dang nhap tai khoan demo/123456
@@ -133,7 +137,7 @@ class GameState extends ChangeNotifier {
   /// chap ma chon them keo khac thi cung xoa chap di (khong xep chong).
   void toggleSelection(FootballMatch m, bool onHome,
       {MarketType market = MarketType.match1x2}) {
-    if (roundPlayed) return;
+    if (roundPlayed || roundInPlay) return;
     final i = slip.indexWhere((s) => s.match.id == m.id);
     if (i >= 0 && slip[i].onHome == onHome && slip[i].market == market) {
       slip.removeAt(i);
@@ -152,7 +156,7 @@ class GameState extends ChangeNotifier {
   /// Bo qua tran dang chon (slip) hoac da dat (pending) de khong doi
   /// odds/payout cua nguoi choi. Goi dinh ky tu SportsbookScreen.
   void tickLiveMarket() {
-    if (roundPlayed) return;
+    if (roundPlayed || roundInPlay) return;
     var changed = false;
     for (final m in matches) {
       if (m.played) continue;
@@ -167,7 +171,11 @@ class GameState extends ChangeNotifier {
 
   double get slipOdds => slip.fold(1.0, (p, s) => p * s.odds);
   bool get canPlaceBet =>
-      slip.isNotEmpty && stake > 0 && stake <= balance && !roundPlayed;
+      slip.isNotEmpty &&
+      stake > 0 &&
+      stake <= balance &&
+      !roundPlayed &&
+      !roundInPlay;
 
   void setStake(double v) {
     stake = v;
@@ -190,13 +198,50 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Da ca vong: ra ket qua 8 tran, thanh toan moi phieu, luu cloud,
-  /// ban notification neu co phieu trung.
+  /// Bam "Da vong": bat dau da LIVE — 8 tran chay phut, ban thang lo dan
+  /// (~21s), roi tu dong chot ket qua. Cho giong tran dang da that.
+  void kickoffRound() {
+    if (roundPlayed || roundInPlay) return;
+    for (final m in matches) {
+      m.startLive(_rng);
+    }
+    roundInPlay = true;
+    liveMinute = 0;
+    notifyListeners();
+    _liveTimer =
+        Timer.periodic(const Duration(milliseconds: 700), (_) => _liveTick());
+  }
+
+  /// Moi ~0.7s: tang phut, cap nhat ty so lo dan. Den phut 90 -> chot vong.
+  void _liveTick() {
+    liveMinute = (liveMinute + 3).clamp(0, 90);
+    for (final m in matches) {
+      m.liveMinute = liveMinute;
+    }
+    if (liveMinute >= 90) {
+      _liveTimer?.cancel();
+      _liveTimer = null;
+      for (final m in matches) {
+        m.finish();
+      }
+      roundInPlay = false;
+      _settleRound();
+      return;
+    }
+    notifyListeners();
+  }
+
+  /// Da ca vong tuc thi (khong live) — giu lai cho tuong thich/test.
   void playRound() {
-    if (roundPlayed) return;
+    if (roundPlayed || roundInPlay) return;
     for (final m in matches) {
       m.play(_rng);
     }
+    _settleRound();
+  }
+
+  /// Thanh toan moi phieu theo ty so cuoi, luu cloud, ban notification.
+  void _settleRound() {
     for (final b in pending) {
       b.settled = true;
       final legs = b.selections;
@@ -268,6 +313,10 @@ class GameState extends ChangeNotifier {
   }
 
   void newRound() {
+    _liveTimer?.cancel();
+    _liveTimer = null;
+    roundInPlay = false;
+    liveMinute = 0;
     roundNumber++;
     matches = generateRound(_rng, roundNumber * 100, league: league);
     roundPlayed = false;
@@ -280,6 +329,7 @@ class GameState extends ChangeNotifier {
   /// Doi giai dau. Tra ve false khi con phieu cho ket qua (tien dang nam
   /// trong cuoc — khong duoc doi san).
   bool switchLeague(League l) {
+    if (roundInPlay) return false;
     if (pending.isNotEmpty) return false;
     if (l == league) return true;
     league = l;
@@ -299,6 +349,10 @@ class GameState extends ChangeNotifier {
   }
 
   void _resetLocal() {
+    _liveTimer?.cancel();
+    _liveTimer = null;
+    roundInPlay = false;
+    liveMinute = 0;
     balance = isDemoWallet ? demoBalance : startBalance;
     wallet.reset(balance);
     roundNumber = 1;
