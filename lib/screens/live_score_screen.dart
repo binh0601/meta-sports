@@ -2,17 +2,23 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../logic/live_match.dart';
+import '../logic/live_tv_channels.dart';
 import '../services/live_score_service.dart';
 import '../theme/brand_colors.dart';
+import '../widgets/live_tv_player.dart';
 import '../widgets/motion_effects.dart';
 
 /// Man hinh ty so truc tiep — CHI XEM, khong dung de dat cuoc. Vao tu icon
 /// live_tv tren AppBar cua SportsbookScreen (push, khong phai tab) de Timer
 /// chi chay khi man hinh dang mo, huy khi pop.
 class LiveScoreScreen extends StatefulWidget {
-  const LiveScoreScreen({super.key});
+  /// Tat khoi video YouTube (WebView) — dat false trong widget test vi
+  /// WebView khong khoi tao duoc trong moi truong flutter test.
+  final bool enableLiveTv;
+  const LiveScoreScreen({super.key, this.enableLiveTv = true});
 
   @override
   State<LiveScoreScreen> createState() => _LiveScoreScreenState();
@@ -25,10 +31,18 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
   int _tickCount = 0;
   final _rng = Random();
 
+  // Trinh phat video cho khoi "Xem truc tiep (TV)". Null khi enableLiveTv=false.
+  VideoPlayerController? _video;
+  bool _videoReady = false;
+  int _channelIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _load();
+    if (widget.enableLiveTv) {
+      _openChannel(0);
+    }
     // Moi 4s: neu la du lieu demo (1 tran, dang da, khong co API key that)
     // -> tick cho tran demo tien trien. Cu ~10 tick (~40s) goi lai _load()
     // mot lan de mo phong polling du lieu that.
@@ -38,6 +52,7 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _video?.dispose();
     super.dispose();
   }
 
@@ -50,6 +65,35 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
     setState(() {
       _matches = matches;
       _loading = false;
+    });
+  }
+
+  /// Mo 1 kenh: huy controller cu, tao moi cho url kenh [i], phat lap lai.
+  /// video_player khong doi nguon duoc nen phai tao lai controller.
+  Future<void> _openChannel(int i) async {
+    final old = _video;
+    setState(() {
+      _channelIndex = i;
+      _videoReady = false;
+      _video = null;
+    });
+    await old?.dispose();
+    final c = VideoPlayerController.networkUrl(
+        Uri.parse(kLiveTvChannels[i].url));
+    try {
+      await c.initialize();
+      await c.setLooping(true);
+      await c.play();
+    } catch (_) {
+      // Stream loi/timeout -> giu khung loading, khong crash.
+    }
+    if (!mounted) {
+      c.dispose();
+      return;
+    }
+    setState(() {
+      _video = c;
+      _videoReady = c.value.isInitialized;
     });
   }
 
@@ -71,6 +115,19 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return _scaffold(
+      tvSection: !widget.enableLiveTv
+          ? null
+          : LiveTvSection(
+              controller: _video,
+              ready: _videoReady,
+              selectedIndex: _channelIndex,
+              onSelect: _openChannel,
+            ),
+    );
+  }
+
+  Widget _scaffold({required Widget? tvSection}) {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Container(
@@ -90,6 +147,7 @@ class _LiveScoreScreenState extends State<LiveScoreScreen> {
               style: TextStyle(fontSize: 11, color: Colors.black54),
             ),
           ),
+          ?tvSection,
           Expanded(child: _body()),
         ],
       ),
