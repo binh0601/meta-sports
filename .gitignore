@@ -53,3 +53,6 @@ android/app/google-services.json
 
 # API keys truyen qua --dart-define-from-file — KHONG commit (repo public)
 dart_defines.json
+
+# APK / file build output — phat hanh qua GitHub Releases, khong commit vao repo
+*.apk

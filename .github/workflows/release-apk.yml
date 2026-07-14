@@ -1,0 +1,51 @@
+name: Release APK
+
+# Tu build APK release va dang len GitHub Releases de moi nguoi tai ve cai,
+# khong can clone/cai Flutter. Kich hoat khi day tag phien ban (vd v1.0.0)
+# hoac bam "Run workflow" thu cong trong tab Actions.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # GROQ_API_KEY lay tu repo secret (Settings > Secrets > Actions).
+      # Khong dat secret -> AI chay che do noi bo (van hoat dong).
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk MegaSports.apk
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          name: MegaSports ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          files: MegaSports.apk
+          generate_release_notes: true

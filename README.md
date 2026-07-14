@@ -1,6 +1,18 @@
 # house_edge_demo
 
-A new Flutter project.
+App Flutter demo môn PRM393 — "Toán học nhà cái".
+
+## 📥 Tải app (APK) — không cần cài Flutter
+
+Muốn cài thử trên điện thoại Android mà không clone/build?
+
+👉 **[Tải APK mới nhất tại trang Releases](https://github.com/binh0601/meta-sports/releases/latest)**
+
+Mở link trên điện thoại → tải file `MegaSports.apk` → cài đặt (nếu máy hỏi thì
+cho phép "Cài từ nguồn không xác định").
+
+> APK được GitHub Actions **tự build và đăng lên Releases** mỗi khi đẩy một tag
+> phiên bản (vd `v1.0.0`) — xem `.github/workflows/release-apk.yml`.
 
 ## Getting Started
 
