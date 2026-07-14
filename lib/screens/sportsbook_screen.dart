@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../logic/football_market.dart';
@@ -18,8 +20,29 @@ import 'live_score_screen.dart';
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
 /// Dieu huong lich su / dang xuat nam o bottom nav cua PlayerHomeScreen.
-class SportsbookScreen extends StatelessWidget {
+class SportsbookScreen extends StatefulWidget {
   const SportsbookScreen({super.key});
+
+  @override
+  State<SportsbookScreen> createState() => _SportsbookScreenState();
+}
+
+class _SportsbookScreenState extends State<SportsbookScreen> {
+  Timer? _oddsTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // San keo "chay": nhich odds cac tran chua da moi 2.5s cho giong live.
+    _oddsTimer = Timer.periodic(
+        const Duration(milliseconds: 2500), (_) => gameState.tickLiveMarket());
+  }
+
+  @override
+  void dispose() {
+    _oddsTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

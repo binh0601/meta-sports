@@ -325,19 +325,45 @@ class OddsSelectButton extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            Text(
-                placed && !selected
-                    ? '@${odds.toStringAsFixed(2)} • ĐÃ ĐẶT'
-                    : '@${odds.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontFamily: kDisplayFont,
-                  fontSize: placed && !selected ? 13 : 16,
-                  fontWeight: FontWeight.w800,
-                  color: selected || placed ? kGold : scheme.primary,
-                )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                    placed && !selected
+                        ? '@${odds.toStringAsFixed(2)} • ĐÃ ĐẶT'
+                        : '@${odds.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontFamily: kDisplayFont,
+                      fontSize: placed && !selected ? 13 : 16,
+                      fontWeight: FontWeight.w800,
+                      color: selected || placed ? kGold : scheme.primary,
+                    )),
+                // Mui ten nhay khi odds live tang/giam (chi keo 1x2 chua chon)
+                if (!isHdp && !selected && !placed)
+                  _OddsArrow(onHome ? match.oddsDirHome : match.oddsDirAway),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Mui ten nho canh odds: xanh len (▲) / do xuong (▼) / an khi khong doi.
+class _OddsArrow extends StatelessWidget {
+  final int dir; // 1 tang, -1 giam, 0 dung
+  const _OddsArrow(this.dir);
+
+  @override
+  Widget build(BuildContext context) {
+    if (dir == 0) return const SizedBox.shrink();
+    final up = dir > 0;
+    return Icon(
+      up ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+      size: 16,
+      color: up ? Colors.lightGreen : Colors.redAccent,
     );
   }
 }
