@@ -58,7 +58,7 @@ class AiAnalysisService {
                 as String)
             .trim();
         return _cache[key] = AiMatchAnalysis(
-          text: '$text\n\n$kAiDisclaimer',
+          text: text,
           homeConfidencePct: ins.expertHomePct,
           source: 'groq',
         );

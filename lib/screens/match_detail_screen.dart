@@ -5,6 +5,7 @@ import '../logic/game_state.dart';
 import '../logic/match_insights.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/ai_analysis_card.dart';
+import '../widgets/bet_slip_drawer.dart';
 import '../widgets/match_card.dart' show OddsSelectButton;
 import '../widgets/motion_effects.dart';
 
@@ -25,6 +26,9 @@ class MatchDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ins = MatchInsights.of(match);
     return Scaffold(
+      // Sidebar phieu cuoc ngay tren man chi tiet: bam odds -> drawer truot ra
+      // de dat phieu luon, khong phai quay ve san keo.
+      endDrawer: const BetSlipDrawer(),
       appBar: AppBar(
         title: const Text('Chi tiết trận đấu'),
         flexibleSpace:
@@ -58,7 +62,7 @@ class MatchDetailScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Center(
                             child: Text(
-                              'Chọn cửa tại đây rồi về tab Trận đấu để đặt phiếu',
+                              'Chọn cửa để mở phiếu cược ngay tại đây',
                               style: TextStyle(
                                   fontSize: 11,
                                   color:

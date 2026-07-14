@@ -126,19 +126,6 @@ class PlayerProfileScreen extends StatelessWidget {
                       child: SizedBox(
                         width: double.infinity,
                         height: 48,
-                        child: FilledButton.tonalIcon(
-                          icon: const Icon(Icons.restart_alt, size: 20),
-                          label: const Text('Chơi lại từ đầu'),
-                          onPressed: () => _confirmReset(context),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    EntranceSlide(
-                      index: 4,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
                         child: FilledButton.icon(
                           style: FilledButton.styleFrom(
                               backgroundColor: scheme.errorContainer,
@@ -163,29 +150,6 @@ class PlayerProfileScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  void _confirmReset(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Chơi lại từ đầu?'),
-        content: Text('Ví về ${fmtMoney(gameState.isDemoWallet
-            ? GameState.demoBalance
-            : GameState.startBalance)}, xóa toàn bộ lịch sử cược.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
-          FilledButton(
-            onPressed: () {
-              gameState.reset();
-              Navigator.pop(ctx);
-            },
-            child: const Text('Chơi lại'),
-          ),
-        ],
-      ),
     );
   }
 }
