@@ -16,12 +16,6 @@ class AiMatchAnalysis {
   });
 }
 
-/// Dong giao duc bat buoc kem moi phan tich: AI dung den may cung
-/// khong thang duoc bien nha cai da tru san trong odds.
-const String kAiDisclaimer =
-    'Lưu ý: phân tích chuẩn đến mấy thì odds cũng đã trừ biên nhà cái '
-    '(~5%) — kỳ vọng dài hạn của người chơi vẫn âm.';
-
 /// Sinh phan tich tu du lieu soi keo co san. Seed theo id tran nen
 /// cung mot tran luon ra cung mot bai — demo on dinh, chay offline.
 AiMatchAnalysis buildLocalAnalysis(FootballMatch m, MatchInsights ins) {
@@ -52,8 +46,7 @@ AiMatchAnalysis buildLocalAnalysis(FootballMatch m, MatchInsights ins) {
     ..write(favPct >= 60
         ? ' Kèo chênh lệch — bù lại odds cho $fav sẽ thấp, '
             'ăn ít mỗi lần trúng.'
-        : ' Hai đội khá cân bằng nên trận này rủi ro cao hơn.')
-    ..write('\n\n$kAiDisclaimer');
+        : ' Hai đội khá cân bằng nên trận này rủi ro cao hơn.');
 
   return AiMatchAnalysis(
     text: buffer.toString(),

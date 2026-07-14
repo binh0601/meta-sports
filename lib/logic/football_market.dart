@@ -13,8 +13,14 @@ class FootballMatch {
   final String flagAway;
   final String kickoff; // gio da hien thi, vd "19:30"
   final double trueProbHome; // xac suat that - nguoi choi KHONG nhin thay
-  final double oddsHome;
-  final double oddsAway;
+  // Odds 1x2 nhay quanh gia goc (baseOdds) de mo phong san keo live.
+  // Betting/settlement doc thang oddsHome/oddsAway hien tai.
+  double oddsHome;
+  double oddsAway;
+  final double baseOddsHome;
+  final double baseOddsAway;
+  int oddsDirHome = 0; // -1 giam / 0 dung / 1 tang (cho mui ten flash)
+  int oddsDirAway = 0;
   final double homeHandicap; // line chap, goc nhin home (am = home cua tren)
   final double oddsHdpHome;
   final double oddsHdpAway;
@@ -33,15 +39,35 @@ class FootballMatch {
     required this.flagAway,
     required this.kickoff,
     required this.trueProbHome,
-    required this.oddsHome,
-    required this.oddsAway,
+    required double oddsHome,
+    required double oddsAway,
     required this.homeHandicap,
     required this.oddsHdpHome,
     required this.oddsHdpAway,
     required this.oddsDraw,
-  });
+  })  : oddsHome = oddsHome,
+        oddsAway = oddsAway,
+        baseOddsHome = oddsHome,
+        baseOddsAway = oddsAway;
 
   String get score => played ? '$homeGoals - $awayGoals' : kickoff;
+
+  /// Nhich odds 1x2 quanh gia goc (±0.08) de san keo trong dang "chay".
+  /// Ghi huong tang/giam de UI hien mui ten. Khong dong khi tran da da.
+  void tickLiveOdds(Random rng) {
+    if (played) return;
+    double jitter(double base) {
+      final t = base + (rng.nextDouble() - 0.5) * 0.12;
+      final c = t.clamp(base - 0.08, base + 0.08);
+      return (c * 100).roundToDouble() / 100;
+    }
+    final nh = jitter(baseOddsHome);
+    oddsDirHome = nh.compareTo(oddsHome);
+    oddsHome = nh;
+    final na = jitter(baseOddsAway);
+    oddsDirAway = na.compareTo(oddsAway);
+    oddsAway = na;
+  }
 
   /// Da tran nay: ket qua rut tu xac suat that qua phan phoi Poisson,
   /// ty so co the hoa vi 2 doi gan nhau ve suc manh.

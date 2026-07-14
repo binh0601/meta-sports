@@ -11,8 +11,12 @@ void main() {
           builder: (context) => Scaffold(
             body: Center(
               child: ElevatedButton(
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const LiveScoreScreen())),
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        // Tat WebView YouTube: khong khoi tao duoc trong test.
+                        builder: (_) =>
+                            const LiveScoreScreen(enableLiveTv: false))),
                 child: const Text('mo'),
               ),
             ),

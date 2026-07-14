@@ -1,19 +1,48 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../theme/brand_colors.dart';
 import '../widgets/bet_slip_drawer.dart';
 import '../widgets/bet_slip_panel.dart';
 import '../widgets/brand_crest.dart';
 import '../widgets/coin_burst.dart';
+import '../widgets/gold_rain.dart';
+import '../widgets/hero_banner.dart';
+import '../widgets/league_switcher.dart';
 import '../widgets/match_card.dart';
 import '../widgets/motion_effects.dart';
+import '../widgets/promo_banner_carousel.dart';
 import 'live_score_screen.dart';
+
 /// San keo cho NGUOI CHOI: quoc ky that, gio da, mua vang khi trung —
 /// nguoi choi khong thay xac suat that va bien nha cai.
 /// Dieu huong lich su / dang xuat nam o bottom nav cua PlayerHomeScreen.
-class SportsbookScreen extends StatelessWidget {
+class SportsbookScreen extends StatefulWidget {
   const SportsbookScreen({super.key});
+
+  @override
+  State<SportsbookScreen> createState() => _SportsbookScreenState();
+}
+
+class _SportsbookScreenState extends State<SportsbookScreen> {
+  Timer? _oddsTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // San keo "chay": nhich odds cac tran chua da moi 2.5s cho giong live.
+    _oddsTimer = Timer.periodic(
+        const Duration(milliseconds: 2500), (_) => gameState.tickLiveMarket());
+  }
+
+  @override
+  void dispose() {
+    _oddsTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +50,8 @@ class SportsbookScreen extends StatelessWidget {
       listenable: gameState,
       builder: (context, _) {
         final g = gameState;
+        final wonThisRound =
+            g.roundPlayed && g.lastResults.any((b) => b.won);
         return Scaffold(
           endDrawer: const BetSlipDrawer(),
           appBar: AppBar(
@@ -37,6 +68,19 @@ class SportsbookScreen extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2)),
                 const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: kGold),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                      g.league == League.worldCup
+                          ? 'WORLD CUP'
+                          : 'CUP CHÂU Á',
+                      style: const TextStyle(fontSize: 9, color: kGold)),
+                ),
               ],
             ),
             actions: [
@@ -54,21 +98,39 @@ class SportsbookScreen extends StatelessWidget {
                 children: [
                   _walletBar(context, g),
                   Expanded(
-                    child: ListView.builder(
+                    child: ListView(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                      itemCount: g.matches.length,
-                      itemBuilder: (context, index) {
-                        return MatchCard(
-                          key: ValueKey(g.matches[index].id),
-                          match: g.matches[index],
-                          index: index,
-                        );
-                      },
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            children: [
+                              LeagueSwitcher(),
+                              SizedBox(height: 8),
+                              PromoBannerCarousel(),
+                            ],
+                          ),
+                        ),
+                        HeroBanner(
+                            roundNumber: g.roundNumber, league: g.league),
+                        for (var i = 0; i < g.matches.length; i++)
+                          MatchCard(
+                            key: ValueKey(g.matches[i].id),
+                            match: g.matches[i],
+                            index: i,
+                          ),
+                      ],
                     ),
                   ),
                   const BetSlipPanel(),
                 ],
               ),
+              // Mua tien vang khi co phieu trung — remount moi vong
+              if (wonThisRound)
+                Positioned.fill(
+                  child: GoldRainOverlay(
+                      key: ValueKey('gold-rain-${g.roundNumber}')),
+                ),
             ],
           ),
         );
@@ -109,8 +171,8 @@ class SportsbookScreen extends StatelessWidget {
                   ),
                   child: Text(
                     g.pending.isEmpty
-                        ? 'Phiếu cược'
-                        : '${g.pending.length} phiếu chờ',
+                        ? 'Vòng ${g.roundNumber}'
+                        : 'Vòng ${g.roundNumber} • ${g.pending.length} phiếu chờ',
                     style: const TextStyle(fontSize: 12, color: Colors.white),
                   ),
                 ),

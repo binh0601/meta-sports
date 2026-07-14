@@ -148,6 +148,23 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Nhich odds 1x2 cac tran chua da de san keo "chay" nhu web that.
+  /// Bo qua tran dang chon (slip) hoac da dat (pending) de khong doi
+  /// odds/payout cua nguoi choi. Goi dinh ky tu SportsbookScreen.
+  void tickLiveMarket() {
+    if (roundPlayed) return;
+    var changed = false;
+    for (final m in matches) {
+      if (m.played) continue;
+      final locked = slip.any((s) => s.match.id == m.id) ||
+          pending.any((b) => b.selections.any((s) => s.match.id == m.id));
+      if (locked) continue;
+      m.tickLiveOdds(_rng);
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
   double get slipOdds => slip.fold(1.0, (p, s) => p * s.odds);
   bool get canPlaceBet =>
       slip.isNotEmpty && stake > 0 && stake <= balance && !roundPlayed;
