@@ -25,7 +25,7 @@ class _OverroundScreenState extends State<OverroundScreen> {
     // Ky vong khi cuoc cua A 100k, gia su xac suat that = xac suat ngam da
     // chuan hoa (ban du doan "chinh xac tuyet doi" nhu tai lieu).
     final trueProbA = probA / (probA + probB);
-    final ev = BettingMath.evPerBet(stake: 100, odds: _oddsA, p: trueProbA);
+    final ev = BettingMath.evPerBet(stake: 100000, odds: _oddsA, p: trueProbA);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Biên nhà cái (Overround)')),

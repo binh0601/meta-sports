@@ -14,8 +14,8 @@ import 'wallet_rules.dart';
 /// Nguoi choi Firebase: vi + lich su dong bo Firestore (fire-and-forget).
 /// Khong attachUser (admin/test): hoat dong thuan local nhu cu.
 class GameState extends ChangeNotifier {
-  static const double startBalance = 500; // 500k cap cho tai khoan moi
-  static const double demoBalance = 10000; // 10 trieu — rieng tai khoan demo
+  static const double startBalance = 500000; // 500.000 VND cap cho tai khoan moi
+  static const double demoBalance = 10000000; // 10 trieu VND — rieng tai khoan demo
   final Random _rng = Random();
 
   double balance = startBalance;
@@ -27,7 +27,7 @@ class GameState extends ChangeNotifier {
   League league = League.asianCup;
 
   final List<BetSelection> slip = []; // phieu dang chon
-  double stake = 100;
+  double stake = 100000; // 100k VND cược mặc định
   final List<BetSlip> pending = []; // da dat, cho da vong
   final List<BetSlip> settled = []; // da co ket qua
   List<BetSlip> lastResults = []; // ket qua vong vua da
@@ -35,6 +35,10 @@ class GameState extends ChangeNotifier {
 
   String? _uid; // != null khi nguoi choi Firebase da dang nhap
   bool syncing = false; // dang tai du lieu cloud
+  
+  String? bankName;
+  String? bankAccountNo;
+  String? bankAccountName;
 
   GameState() {
     matches = generateRound(_rng, 1, league: league);
@@ -56,6 +60,9 @@ class GameState extends ChangeNotifier {
     isDemoWallet = false;
     wallet.totalFunded = profile.totalFunded;
     wallet.totalWagered = profile.totalWagered;
+    bankName = profile.bankName;
+    bankAccountNo = profile.bankAccountNo;
+    bankAccountName = profile.bankAccountName;
     settled
       ..clear()
       ..addAll(history.map((h) => h.slip));
@@ -76,7 +83,17 @@ class GameState extends ChangeNotifier {
   void attachDemo() {
     _uid = null;
     isDemoWallet = true;
+    bankName = null;
+    bankAccountNo = null;
+    bankAccountName = null;
     _resetLocal();
+  }
+
+  void setBankInfo(String bName, String bNo, String bAccName) {
+    bankName = bName;
+    bankAccountNo = bNo;
+    bankAccountName = bAccName;
+    notifyListeners();
   }
 
   void detachUser() {

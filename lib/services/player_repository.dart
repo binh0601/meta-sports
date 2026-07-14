@@ -9,6 +9,7 @@ import 'firebase_bootstrap.dart';
 ///   users/{uid}: email, displayName, balance, roundNumber, resetAt, createdAt
 ///   users/{uid}/bets/{auto}: round, legs[], stake, totalOdds, won, payout,
 ///                            net, balanceAfter, settledAt
+///   deposits/{orderCode}: orderCode, uid, username, amount, status, transferCode, expiredAt, createdAt
 /// Moi ham deu tu nuot loi mang (fire-and-forget) de khong chan gameplay.
 class PlayerRepository {
   PlayerRepository._();
@@ -18,6 +19,139 @@ class PlayerRepository {
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
       _db.collection('users').doc(uid);
 
+  /// Tạo yêu cầu nạp tiền thủ công
+  Future<Map<String, dynamic>?> createManualDeposit({
+    required String uid,
+    required String username,
+    required int amountVnd,
+    required int orderCode,
+    required String transferCode,
+  }) async {
+    try {
+      final docRef = _db.collection('deposits').doc(orderCode.toString());
+      
+      await docRef.set({
+        'orderCode': orderCode,
+        'uid': uid,
+        'username': username,
+        'amount': amountVnd,
+        'status': 'pending',
+        'transferCode': transferCode,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      
+      return {
+        'success': true,
+        'orderCode': orderCode,
+        'transferCode': transferCode,
+      };
+    } catch (e) {
+      debugPrint('createManualDeposit Exception: $e');
+      return null;
+    }
+  }
+
+  /// Tạo yêu cầu rút tiền (Atomic Transaction để trừ tiền ngay lập tức)
+  Future<bool> createWithdrawRequest({
+    required String uid,
+    required String username,
+    required int amountVnd,
+    required String bankName,
+    required String bankAccountNo,
+    required String bankAccountName,
+  }) async {
+    try {
+      final orderCode = DateTime.now().millisecondsSinceEpoch;
+      final withdrawRef = _db.collection('withdrawals').doc(orderCode.toString());
+      final userRef = _userDoc(uid);
+      
+      await _db.runTransaction((transaction) async {
+        final userDoc = await transaction.get(userRef);
+        if (!userDoc.exists) throw Exception("User not found");
+        
+        final balance = (userDoc.data()!['balance'] as num?)?.toDouble() ?? 0.0;
+        if (balance < amountVnd) {
+          throw Exception("Insufficient balance");
+        }
+        
+        // Tạo hóa đơn pending
+        transaction.set(withdrawRef, {
+          'orderCode': orderCode,
+          'uid': uid,
+          'username': username,
+          'amount': amountVnd,
+          'status': 'pending',
+          'bankName': bankName,
+          'bankAccountNo': bankAccountNo,
+          'bankAccountName': bankAccountName,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        
+        // Trừ tiền ngay lập tức
+        transaction.update(userRef, {
+          'balance': FieldValue.increment(-amountVnd),
+        });
+      });
+      
+      return true;
+    } catch (e) {
+      debugPrint('createWithdrawRequest Exception: $e');
+      return false;
+    }
+  }
+
+  /// Dành cho Admin: Lấy danh sách chờ duyệt
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToPendingDeposits() {
+    return _db
+        .collection('deposits')
+        .where('status', isEqualTo: 'pending')
+        .snapshots();
+  }
+
+  /// Dành cho Admin: Duyệt nạp tiền (Cộng tiền an toàn qua Transaction)
+  Future<bool> approveDeposit(String depositId, String uid, int amount) async {
+    try {
+      final depositRef = _db.collection('deposits').doc(depositId);
+      final userRef = _userDoc(uid);
+      
+      await _db.runTransaction((transaction) async {
+        final depositDoc = await transaction.get(depositRef);
+        if (!depositDoc.exists) throw Exception("Deposit not found");
+        
+        final data = depositDoc.data()!;
+        if (data['status'] == 'approved') throw Exception("Already approved");
+        
+        transaction.update(depositRef, {
+          'status': 'approved',
+          'updatedAt': FieldValue.serverTimestamp()
+        });
+        
+        transaction.update(userRef, {
+          'balance': FieldValue.increment(amount),
+          'totalFunded': FieldValue.increment(amount),
+        });
+      });
+      return true;
+    } catch (e) {
+      debugPrint('approveDeposit Exception: $e');
+      return false;
+    }
+  }
+
+  /// Dành cho Admin: Từ chối nạp tiền
+  Future<bool> rejectDeposit(String depositId) async {
+    try {
+      await _db.collection('deposits').doc(depositId).update({
+        'status': 'rejected',
+        'updatedAt': FieldValue.serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      debugPrint('rejectDeposit Exception: $e');
+      return false;
+    }
+  }
+
   /// Tra ve profile vi; user moi duoc tao voi [defaultBalance].
   /// Tai khoan cu thieu field vi -> mac dinh totalFunded=500, wagered=0.
   Future<({
@@ -25,6 +159,9 @@ class PlayerRepository {
     int roundNumber,
     double totalFunded,
     double totalWagered,
+    String? bankName,
+    String? bankAccountNo,
+    String? bankAccountName,
   })> loadOrCreateProfile(User user, double defaultBalance) async {
     final ref = _userDoc(user.uid);
     final snap = await ref.get();
@@ -43,6 +180,9 @@ class PlayerRepository {
         roundNumber: 1,
         totalFunded: defaultBalance,
         totalWagered: 0.0,
+        bankName: null,
+        bankAccountNo: null,
+        bankAccountName: null,
       );
     }
     final d = snap.data()!;
@@ -51,7 +191,24 @@ class PlayerRepository {
       roundNumber: (d['roundNumber'] as num?)?.toInt() ?? 1,
       totalFunded: (d['totalFunded'] as num?)?.toDouble() ?? defaultBalance,
       totalWagered: (d['totalWagered'] as num?)?.toDouble() ?? 0.0,
+      bankName: d['bankName'] as String?,
+      bankAccountNo: d['bankAccountNo'] as String?,
+      bankAccountName: d['bankAccountName'] as String?,
     );
+  }
+
+  Future<bool> updateBankInfo(String uid, String bankName, String bankAccountNo, String bankAccountName) async {
+    try {
+      await _userDoc(uid).update({
+        'bankName': bankName,
+        'bankAccountNo': bankAccountNo,
+        'bankAccountName': bankAccountName,
+      });
+      return true;
+    } catch (e) {
+      debugPrint('updateBankInfo Exception: $e');
+      return false;
+    }
   }
 
   Future<void> saveState(String uid,
@@ -128,5 +285,92 @@ class PlayerRepository {
       debugPrint('loadRecentBets loi: $e');
       return [];
     }
+  }
+  /// Dành cho Admin: Lấy danh sách rút tiền chờ duyệt
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToPendingWithdrawals() {
+    return _db
+        .collection('withdrawals')
+        .where('status', isEqualTo: 'pending')
+        .snapshots();
+  }
+
+  /// Dành cho Admin: Duyệt rút tiền
+  Future<bool> approveWithdrawal(String withdrawId, String adminEmail) async {
+    try {
+      await _db.collection('withdrawals').doc(withdrawId).update({
+        'status': 'approved',
+        'processedBy': adminEmail,
+        'processedAt': FieldValue.serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      debugPrint('approveWithdrawal Exception: $e');
+      return false;
+    }
+  }
+
+  /// Dành cho Admin: Từ chối rút tiền (hoàn lại số dư)
+  Future<bool> rejectWithdrawal(String withdrawId, String uid, int amount, String adminEmail, String? rejectReason) async {
+    try {
+      final withdrawRef = _db.collection('withdrawals').doc(withdrawId);
+      final userRef = _userDoc(uid);
+
+      await _db.runTransaction((transaction) async {
+        final wDoc = await transaction.get(withdrawRef);
+        if (!wDoc.exists || wDoc.data()!['status'] != 'pending') {
+          throw Exception('Invalid withdrawal state');
+        }
+
+        // Đổi trạng thái
+        transaction.update(withdrawRef, {
+          'status': 'rejected',
+          'rejectReason': rejectReason ?? '',
+          'processedBy': adminEmail,
+          'processedAt': FieldValue.serverTimestamp()
+        });
+
+        // Hoàn tiền
+        transaction.update(userRef, {
+          'balance': FieldValue.increment(amount),
+        });
+      });
+      
+      return true;
+    } catch (e) {
+      debugPrint('rejectWithdrawal Exception: $e');
+      return false;
+    }
+  }
+
+  /// Lấy danh sách nạp tiền đã xử lý (approved/rejected) cho Admin
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToProcessedDeposits() {
+    return _db
+        .collection('deposits')
+        .where('status', whereIn: ['approved', 'rejected'])
+        .snapshots();
+  }
+
+  /// Lấy danh sách rút tiền đã xử lý (approved/rejected) cho Admin
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToProcessedWithdrawals() {
+    return _db
+        .collection('withdrawals')
+        .where('status', whereIn: ['approved', 'rejected'])
+        .snapshots();
+  }
+
+  /// Lấy danh sách nạp tiền của một user
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserDeposits(String uid) {
+    return _db
+        .collection('deposits')
+        .where('uid', isEqualTo: uid)
+        .snapshots();
+  }
+
+  /// Lấy danh sách rút tiền của một user
+  Stream<QuerySnapshot<Map<String, dynamic>>> listenToUserWithdrawals(String uid) {
+    return _db
+        .collection('withdrawals')
+        .where('uid', isEqualTo: uid)
+        .snapshots();
   }
 }
