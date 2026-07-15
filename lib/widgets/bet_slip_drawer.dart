@@ -72,8 +72,12 @@ class _BetSlipDrawerState extends State<BetSlipDrawer> {
                   child: ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
-                      if (!g.roundPlayed && !g.roundInPlay) ...[
-                        _label(context, 'ĐANG CHỌN (${g.slip.length})'),
+                      if (!g.roundPlayed) ...[
+                        _label(
+                            context,
+                            g.roundInPlay
+                                ? 'KÈO CHẤP TRỰC TIẾP (${g.slip.length})'
+                                : 'ĐANG CHỌN (${g.slip.length})'),
                         if (g.slip.isEmpty)
                           Text(
                             'Chưa chọn kèo nào. Bấm vào odds của đội bạn '

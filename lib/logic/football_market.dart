@@ -21,9 +21,16 @@ class FootballMatch {
   final double baseOddsAway;
   int oddsDirHome = 0; // -1 giam / 0 dung / 1 tang (cho mui ten flash)
   int oddsDirAway = 0;
-  final double homeHandicap; // line chap, goc nhin home (am = home cua tren)
-  final double oddsHdpHome;
-  final double oddsHdpAway;
+  // Keo chap: line + odds TU DONG dinh gia lai khi dang da (in-play) sao cho
+  // luon giu bien nha cai. Betting/settlement doc snapshot trong BetSelection.
+  double homeHandicap; // line chap, goc nhin home (am = home cua tren)
+  double oddsHdpHome;
+  double oddsHdpAway;
+  final double baseHandicap;
+  final double baseOddsHdpHome;
+  final double baseOddsHdpAway;
+  int oddsDirHdpHome = 0;
+  int oddsDirHdpAway = 0;
   final double oddsDraw;
 
   bool played = false;
@@ -47,14 +54,20 @@ class FootballMatch {
     required this.trueProbHome,
     required double oddsHome,
     required double oddsAway,
-    required this.homeHandicap,
-    required this.oddsHdpHome,
-    required this.oddsHdpAway,
+    required double homeHandicap,
+    required double oddsHdpHome,
+    required double oddsHdpAway,
     required this.oddsDraw,
   })  : oddsHome = oddsHome,
         oddsAway = oddsAway,
         baseOddsHome = oddsHome,
-        baseOddsAway = oddsAway;
+        baseOddsAway = oddsAway,
+        homeHandicap = homeHandicap,
+        baseHandicap = homeHandicap,
+        oddsHdpHome = oddsHdpHome,
+        oddsHdpAway = oddsHdpAway,
+        baseOddsHdpHome = oddsHdpHome,
+        baseOddsHdpAway = oddsHdpAway;
 
   String get score => played ? '$homeGoals - $awayGoals' : kickoff;
 
@@ -106,6 +119,37 @@ class FootballMatch {
   int get liveHomeGoals => _goalMinsHome.where((m) => m <= liveMinute).length;
   int get liveAwayGoals => _goalMinsAway.where((m) => m <= liveMinute).length;
 
+  /// In-play: TU DONG dinh gia lai theo dien bien (ty so live + phut da da).
+  /// Odds LUON nhan bien nha cai (×0.95) nen the nao cung loi cho nha cai;
+  /// khi co ban thang -> xac suat doi -> odds va line chap giat theo ngay.
+  void updateLiveMarket(Random rng) {
+    if (played) return;
+    double round2(double v) => (v * 100).roundToDouble() / 100;
+    double jit() => (rng.nextDouble() - 0.5) * 0.02;
+
+    // Xac suat thang live: goc + anh huong ty so, cang ve cuoi tran cang manh.
+    final diff = liveHomeGoals - liveAwayGoals;
+    final t = liveMinute / 90.0;
+    final p = (trueProbHome + diff * (0.10 + 0.20 * t)).clamp(0.06, 0.94);
+
+    // 1x2: odds = bien nha cai / xac suat -> luon co lai cho nha cai.
+    final nh = round2(0.95 / p + jit());
+    oddsDirHome = nh.compareTo(oddsHome);
+    oddsHome = nh;
+    final na = round2(0.95 / (1 - p) + jit());
+    oddsDirAway = na.compareTo(oddsAway);
+    oddsAway = na;
+
+    // Keo chap: line tu dong theo xac suat live; odds @ ~1.90 giu bien nha cai.
+    homeHandicap = _handicapLine(p);
+    final hh = round2(1.90 + jit() * 4);
+    oddsDirHdpHome = hh.compareTo(oddsHdpHome);
+    oddsHdpHome = hh;
+    final ha = round2(1.90 + jit() * 4);
+    oddsDirHdpAway = ha.compareTo(oddsHdpAway);
+    oddsHdpAway = ha;
+  }
+
   /// Ket thuc tran: chot played, hien du ty so cuoi.
   void finish() {
     inPlay = false;
@@ -152,15 +196,17 @@ class BetSelection {
   final FootballMatch match;
   final bool onHome;
   final MarketType market;
-  BetSelection(this.match, this.onHome, {this.market = MarketType.match1x2});
+  // Snapshot gia + line NGAY LUC CHON — odds live tiep tuc chay nhung phieu
+  // da dat van an theo gia da lay (dung nhu nha cai that).
+  final double odds;
+  final double line;
 
-  /// Line chap theo goc nhin cua lua chon nay (chi co y nghia khi
-  /// market == handicap).
-  double get line => onHome ? match.homeHandicap : -match.homeHandicap;
+  BetSelection(this.match, this.onHome, {this.market = MarketType.match1x2})
+      : odds = market == MarketType.handicap
+            ? (onHome ? match.oddsHdpHome : match.oddsHdpAway)
+            : (onHome ? match.oddsHome : match.oddsAway),
+        line = onHome ? match.homeHandicap : -match.homeHandicap;
 
-  double get odds => market == MarketType.handicap
-      ? (onHome ? match.oddsHdpHome : match.oddsHdpAway)
-      : (onHome ? match.oddsHome : match.oddsAway);
   String get teamName => onHome ? match.home : match.away;
   bool get won =>
       match.played &&

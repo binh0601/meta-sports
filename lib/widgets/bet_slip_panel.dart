@@ -4,6 +4,7 @@ import '../logic/betting_math.dart';
 import '../logic/football_market.dart';
 import '../logic/game_state.dart';
 import '../logic/handicap_settlement.dart';
+import '../theme/brand_colors.dart';
 import 'motion_effects.dart';
 
 /// Thanh tom tat duoi san keo: mo sidebar phieu cuoc + nut da vong.
@@ -78,18 +79,32 @@ class BetSlipPanel extends StatelessWidget {
     );
   }
 
-  /// Dang da: hien phut chay + so phieu dang cho, khoa dat cuoc.
+  /// Dang da: hien phut chay + goi y cuoc keo chap truc tiep (1x2 da khoa).
   Widget _live(BuildContext context, GameState g) {
     final scheme = Theme.of(context).colorScheme;
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const PulseDot(Colors.redAccent),
-        const SizedBox(width: 8),
-        Text("Đang đá — phút ${g.liveMinute}'",
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        const Spacer(),
-        Text('${g.pending.length} phiếu chờ kết quả',
-            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+        Row(children: [
+          const PulseDot(Colors.redAccent),
+          const SizedBox(width: 8),
+          Text("Đang đá — phút ${g.liveMinute}'",
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Spacer(),
+          Text('${g.pending.length} phiếu chờ',
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+        ]),
+        const SizedBox(height: 6),
+        Row(children: [
+          const Icon(Icons.bolt, size: 14, color: kGold),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              'Kèo chấp đang chạy — bấm odds kèo chấp trên trận để cược trực tiếp.',
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            ),
+          ),
+        ]),
       ],
     );
   }

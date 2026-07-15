@@ -137,7 +137,9 @@ class GameState extends ChangeNotifier {
   /// chap ma chon them keo khac thi cung xoa chap di (khong xep chong).
   void toggleSelection(FootballMatch m, bool onHome,
       {MarketType market = MarketType.match1x2}) {
-    if (roundPlayed || roundInPlay) return;
+    if (roundPlayed) return;
+    // Dang da: chi cho cuoc KEO CHAP (keo 1x2/ti so khoa - chi truoc tran).
+    if (roundInPlay && market != MarketType.handicap) return;
     final i = slip.indexWhere((s) => s.match.id == m.id);
     if (i >= 0 && slip[i].onHome == onHome && slip[i].market == market) {
       slip.removeAt(i);
@@ -175,7 +177,8 @@ class GameState extends ChangeNotifier {
       stake > 0 &&
       stake <= balance &&
       !roundPlayed &&
-      !roundInPlay;
+      // Dang da van dat duoc neu toan bo phieu la keo chap (in-play).
+      (!roundInPlay || slip.every((s) => s.market == MarketType.handicap));
 
   void setStake(double v) {
     stake = v;
@@ -205,18 +208,27 @@ class GameState extends ChangeNotifier {
     for (final m in matches) {
       m.startLive(_rng);
     }
+    slip.clear(); // bo cac lua chon chua dat truoc gio; vao san la khoa keo 1x2
     roundInPlay = true;
     liveMinute = 0;
     notifyListeners();
+    // ~40s cho ca vong (du thoi gian cuoc keo chap in-play).
     _liveTimer =
-        Timer.periodic(const Duration(milliseconds: 700), (_) => _liveTick());
+        Timer.periodic(const Duration(milliseconds: 900), (_) => _liveTick());
   }
 
   /// Moi ~0.7s: tang phut, cap nhat ty so lo dan. Den phut 90 -> chot vong.
   void _liveTick() {
-    liveMinute = (liveMinute + 3).clamp(0, 90);
+    liveMinute = (liveMinute + 2).clamp(0, 90);
     for (final m in matches) {
       m.liveMinute = liveMinute;
+    }
+    // Odds 1x2 + keo chap TU DONG dinh gia lai theo dien bien; bo qua tran da
+    // dat cuoc de giu gia snapshot cho nguoi choi.
+    for (final m in matches) {
+      final locked = slip.any((s) => s.match.id == m.id) ||
+          pending.any((b) => b.selections.any((s) => s.match.id == m.id));
+      if (!locked) m.updateLiveMarket(_rng);
     }
     if (liveMinute >= 90) {
       _liveTimer?.cancel();
