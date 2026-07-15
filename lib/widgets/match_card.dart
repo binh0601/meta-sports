@@ -77,6 +77,35 @@ class MatchCard extends StatelessWidget {
                                   match: match, onHome: false)),
                         ],
                       ),
+                      // Dang da: mo cuoc KEO CHAP truc tiep ngay tren the,
+                      // line + odds tu dong chay theo tran.
+                      if (match.inPlay) ...[
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          const Icon(Icons.bolt, size: 13, color: kGold),
+                          const SizedBox(width: 4),
+                          Text('KÈO CHẤP TRỰC TIẾP',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  letterSpacing: .5,
+                                  fontWeight: FontWeight.w800,
+                                  color: kGold.withValues(alpha: .9))),
+                        ]),
+                        const SizedBox(height: 6),
+                        Row(children: [
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match,
+                                  onHome: true,
+                                  market: MarketType.handicap)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: OddsSelectButton(
+                                  match: match,
+                                  onHome: false,
+                                  market: MarketType.handicap)),
+                        ]),
+                      ],
                       const SizedBox(height: 6),
                       Text(
                         'Xem kèo chấp & nhận định ›',
@@ -231,8 +260,9 @@ class OddsSelectButton extends StatelessWidget {
     final placed =
         g.isBetPlaced(match, onHome, market: market); // da dat phieu, cho ket qua
 
-    // Dang da: dong cua cuoc, hien lai cua + odds mau trung tinh.
-    if (match.inPlay) {
+    // Dang da: keo 1x2/ti so khoa (chi cuoc truoc tran). Keo chap van cuoc
+    // duoc live -> khong khoa, roi xuong phan bettable ben duoi.
+    if (match.inPlay && !isHdp) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
@@ -379,9 +409,11 @@ class OddsSelectButton extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: selected || placed ? kGold : scheme.primary,
                     )),
-                // Mui ten nhay khi odds live tang/giam (chi keo 1x2 chua chon)
-                if (!isHdp && !selected && !placed)
-                  _OddsArrow(onHome ? match.oddsDirHome : match.oddsDirAway),
+                // Mui ten nhay khi odds live tang/giam (1x2 va keo chap)
+                if (!selected && !placed)
+                  _OddsArrow(isHdp
+                      ? (onHome ? match.oddsDirHdpHome : match.oddsDirHdpAway)
+                      : (onHome ? match.oddsDirHome : match.oddsDirAway)),
               ],
             ),
           ],
