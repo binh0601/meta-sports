@@ -72,7 +72,7 @@ class _BetSlipDrawerState extends State<BetSlipDrawer> {
                   child: ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
-                      if (!g.roundPlayed) ...[
+                      if (!g.roundPlayed && !g.roundInPlay) ...[
                         _label(context, 'ĐANG CHỌN (${g.slip.length})'),
                         if (g.slip.isEmpty)
                           Text(
@@ -225,13 +225,17 @@ class _BetSlipDrawerState extends State<BetSlipDrawer> {
                       icon: const SpinningBallIcon(),
                       label: Text(g.roundPlayed
                           ? 'Vòng đã đá — về sàn bốc vòng mới'
-                          : 'Đá vòng ${g.roundNumber} ngay'),
-                      onPressed: g.roundPlayed
-                          ? () => Navigator.pop(context)
-                          : () {
-                              g.playRound();
-                              Navigator.pop(context);
-                            },
+                          : g.roundInPlay
+                              ? "Đang đá — phút ${g.liveMinute}'"
+                              : 'Đá vòng ${g.roundNumber} ngay'),
+                      onPressed: g.roundInPlay
+                          ? null
+                          : g.roundPlayed
+                              ? () => Navigator.pop(context)
+                              : () {
+                                  g.kickoffRound();
+                                  Navigator.pop(context);
+                                },
                     ),
                   ),
                 ),

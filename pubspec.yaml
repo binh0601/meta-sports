@@ -42,6 +42,7 @@ flutter:
     - assets/flags/
     - assets/images/
     - assets/fonts/
+    - assets/videos/
   fonts:
     - family: RussoOne
       fonts:
