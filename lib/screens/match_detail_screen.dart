@@ -62,14 +62,20 @@ class MatchDetailScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Center(
                             child: Text(
-                              'Chọn cửa để mở phiếu cược ngay tại đây',
+                              match.inPlay
+                                  ? 'Đang đá — kèo tỉ số đã khoá, cược KÈO CHẤP trực tiếp bên dưới'
+                                  : 'Chọn cửa để mở phiếu cược ngay tại đây',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: 11,
-                                  color:
-                                      Theme.of(context).colorScheme.outline),
+                                  color: match.inPlay
+                                      ? Colors.redAccent
+                                      : Theme.of(context).colorScheme.outline),
                             ),
                           ),
-                          _AccentSectionTitle('Kèo chấp', const Color(0xFFEAB308)),
+                          _AccentSectionTitle(
+                              match.inPlay ? 'Kèo chấp trực tiếp' : 'Kèo chấp',
+                              const Color(0xFFEAB308)),
                           Row(children: [
                             Expanded(
                                 child: OddsSelectButton(
@@ -183,18 +189,30 @@ class MatchDetailScreen extends StatelessWidget {
                   Text(
                     match.played
                         ? '${match.homeGoals} - ${match.awayGoals}'
-                        : match.kickoff,
+                        : match.inPlay
+                            ? '${match.liveHomeGoals} - ${match.liveAwayGoals}'
+                            : match.kickoff,
                     style: const TextStyle(
                         fontFamily: kDisplayFont,
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: kGold),
                   ),
-                  Text(match.played ? 'KẾT THÚC' : 'GIỜ ĐÁ',
+                  Text(
+                      match.played
+                          ? 'KẾT THÚC'
+                          : match.inPlay
+                              ? "● LIVE ${match.liveMinute}'"
+                              : 'GIỜ ĐÁ',
                       style: TextStyle(
                           fontSize: 9,
                           letterSpacing: 1,
-                          color: Colors.white.withValues(alpha: .6))),
+                          fontWeight: match.inPlay
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: match.inPlay
+                              ? Colors.redAccent
+                              : Colors.white.withValues(alpha: .6))),
                 ],
               ),
               team(match.away, match.flagAway),
