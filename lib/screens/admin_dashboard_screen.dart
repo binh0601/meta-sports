@@ -6,6 +6,7 @@ import '../logic/auth_state.dart';
 import '../logic/betting_math.dart';
 import '../services/player_repository.dart';
 import '../theme/brand_colors.dart';
+import '../widgets/stat_card.dart';
 import 'login_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -14,7 +15,7 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Admin Dashboard'),
@@ -35,10 +36,12 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ],
           bottom: const TabBar(
+            isScrollable: true,
             tabs: [
               Tab(text: 'Duyệt Nạp tiền'),
               Tab(text: 'Duyệt Rút tiền'),
               Tab(text: 'Lịch sử duyệt'),
+              Tab(text: 'Toán nhà cái'),
             ],
             indicatorColor: kGold,
             labelColor: kGold,
@@ -50,11 +53,81 @@ class AdminDashboardScreen extends StatelessWidget {
             _DepositTab(),
             _WithdrawTab(),
             _HistoryTab(),
+            _HouseMathTab(),
           ],
         ),
       ),
     );
   }
+}
+
+/// Tab "Toan nha cai": tom tat bien nha cai + luat so lon (goc nhin nha cai).
+/// So lieu tinh truc tiep tu BettingMath — dung nhu tai lieu "Toan hoc nha cai".
+class _HouseMathTab extends StatelessWidget {
+  const _HouseMathTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final overround = BettingMath.overround([1.90, 1.90]);
+    final hold = BettingMath.hold(overround);
+    final parlay2 = BettingMath.parlayMargin(2);
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const SectionTitle('Biên nhà cái'),
+        StatRow(cards: [
+          StatCard(
+              label: 'Overround',
+              value: fmtPct(overround),
+              icon: Icons.percent,
+              accentColor: kGold),
+          StatCard(
+              label: 'Biên giữ',
+              value: fmtPct(hold),
+              icon: Icons.savings,
+              accentColor: Colors.greenAccent),
+          StatCard(
+              label: 'Xiên 2 kèo',
+              value: fmtPct(parlay2),
+              icon: Icons.layers,
+              accentColor: Colors.orangeAccent),
+        ]),
+        const SizedBox(height: 16),
+        _card('Vì sao nhà cái luôn lời', [
+          'Odds = xác suất thật × 0.95 → mỗi cửa nhà cái đã ăn sẵn ~5%.',
+          'Kèo 50/50 công bằng phải trả @2.00, nhà cái chỉ trả @1.90 — phần thiếu chính là biên.',
+          'Cứ 10 triệu tiền cược, nhà cái kỳ vọng giữ ~${fmtMoney(hold * 10000000)}.',
+        ]),
+        const SizedBox(height: 12),
+        _card('Luật số lớn — càng chơi càng thua', [
+          'Biên nhà cái trôi đều: +5k mỗi ván (tuyến tính theo số ván).',
+          'May rủi chỉ dao động ±95k × √(số ván) — chậm hơn nhiều.',
+          'Hai đường giao nhau ở ${BettingMath.crossoverGames} ván; sau đó biên nhà cái luôn thắng may rủi.',
+          '~${fmtPct(BettingMath.winnersShare(100), 0)} người chơi còn lời sau 100 ván; chỉ ~${fmtPct(BettingMath.winnersShare(1000), 0)} sau 1000 ván.',
+        ]),
+      ],
+    );
+  }
+
+  Widget _card(String title, List<String> lines) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 15, color: kGold)),
+            const SizedBox(height: 8),
+            for (final l in lines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('•  ', style: TextStyle(color: kGold)),
+                  Expanded(child: Text(l, style: const TextStyle(fontSize: 13))),
+                ]),
+              ),
+          ]),
+        ),
+      );
 }
 
 class _DepositTab extends StatelessWidget {
