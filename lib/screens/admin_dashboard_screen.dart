@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../logic/auth_state.dart';
 import '../logic/betting_math.dart';
 import '../services/player_repository.dart';
 import '../theme/brand_colors.dart';
+import 'login_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -19,6 +21,19 @@ class AdminDashboardScreen extends StatelessWidget {
           flexibleSpace: Container(
             decoration: const BoxDecoration(gradient: kBrandGradient),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Đăng xuất',
+              onPressed: () async {
+                final nav = Navigator.of(context);
+                await authState.logout();
+                nav.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (_) => false);
+              },
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Duyệt Nạp tiền'),
