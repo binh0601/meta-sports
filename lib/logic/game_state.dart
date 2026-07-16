@@ -300,6 +300,28 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---- Vi dung chung voi game "Keo Chop 30s" (xac_suat_game) ----
+
+  /// Tru vi khi dat cuoc Keo Chop. Tra false neu khong du dieu kien.
+  /// Ghi nhan vao totalWagered de thong ke house edge chung.
+  bool placeXsStake(double amount) {
+    if (amount <= 0 || amount > balance) return false;
+    balance -= amount;
+    wallet.recordWager(amount);
+    _saveStateToCloud();
+    notifyListeners();
+    return true;
+  }
+
+  /// Cong vi tien thang tu mot ky Keo Chop (0 thi bo qua). Khong ghi vao
+  /// balanceHistory — bieu do lai/lo giu rieng cho phan bong da.
+  void addXsPayout(double payout) {
+    if (payout <= 0) return;
+    balance += payout;
+    _saveStateToCloud();
+    notifyListeners();
+  }
+
   /// Nap tien gia lap: cong vi ngay; moi dong nap keo theo 5x rollover.
   void deposit(double amount) {
     if (amount <= 0) return;

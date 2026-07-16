@@ -1,0 +1,110 @@
+========================================================================
+  MÔ TẢ DỰ ÁN — MEGA SPORTS / HOUSE EDGE DEMO
+  Đồ án môn PRM393 — Ứng dụng mô phỏng giáo dục
+========================================================================
+
+1. TÊN & MỤC TIÊU
+------------------------------------------------------------------------
+- Tên hiển thị: Mega Sports (thư mục: house_edge_demo).
+- Chủ đề: "Toán học nhà cái — vì sao người chơi luôn thua".
+- Mục tiêu học thuật: minh hoạ trực quan các khái niệm xác suất và toán
+  cờ bạc — house edge (biên nhà cái), overround, kỳ vọng toán học
+  (expected value), parlay (cược xâu), martingale, và quy luật số lớn.
+- Bản chất: ứng dụng MÔ PHỎNG GIÁO DỤC. Không có tiền thật, không nạp/rút
+  tiền thật, không cổng thanh toán thật. Toàn bộ "xu / VND" là điểm ảo.
+
+
+2. NỀN TẢNG & CÔNG NGHỆ
+------------------------------------------------------------------------
+- Framework: Flutter (Dart), Material 3, giao diện tối (dark theme).
+- State management: ChangeNotifier singleton toàn cục (không dùng package
+  provider/Bloc/Riverpod) — đủ đơn giản, dễ giải thích trong báo cáo.
+- Backend tuỳ chọn: Firebase (Auth + Firestore + Messaging) để đồng bộ ví
+  và lịch sử người chơi. App VẪN CHẠY ĐƯỢC ở chế độ local khi thiếu file
+  cấu hình Firebase (google-services.json không có trong repo public).
+- Tích hợp tuỳ chọn (bật bằng --dart-define, không bắt buộc):
+    * GROQ_API_KEY     -> phân tích trận đấu bằng AI (không key thì dùng
+                          phân tích local dự phòng).
+    * FOOTBALL_API_KEY -> tỷ số bóng đá trực tiếp qua API-Football (không
+                          key thì chạy demo trận giả).
+
+
+3. VAI TRÒ NGƯỜI DÙNG
+------------------------------------------------------------------------
+- Người chơi: đăng nhập Firebase, có ví ảo, đặt cược, xem lịch sử/thống kê.
+- Nhà cái (admin): tài khoản test bypass Firebase (admin / 123456) vào
+  dashboard nhà cái để xem app "ăn" tiền người chơi như thế nào.
+- Tài khoản demo: ví ảo 10 triệu, hoạt động thuần local.
+
+
+4. TÍNH NĂNG CHÍNH
+------------------------------------------------------------------------
+- Sảnh kèo bóng đá (sportsbook): kèo 1x2, kèo chấp (handicap), overround.
+- Phiếu cược đơn & cược xâu (parlay) với biên nhà cái tăng theo số kèo.
+- Màn minh hoạ chuyên đề: Overround, Parlay, Martingale, Long-run
+  (quy luật số lớn — chơi lâu ắt thua).
+- Ví ảo: nạp/rút giả lập, điều kiện rollover 5x mỗi lần nạp.
+- Lịch sử cược & biểu đồ biến động số dư.
+- Tỷ số trực tiếp (livescore) + phân tích trận bằng AI (tuỳ chọn).
+- Dashboard nhà cái: đối chiếu lãi/lỗ thực tế với kỳ vọng toán học.
+
+  Trò chơi "Kèo Chớp · 30 giây" (tab thứ 4 — bóng đá hoá của "Xác Suất 30"):
+  - Mỗi kỳ 30s = một "trận chớp nhoáng", RNG sinh số 0–9 = TỔNG BÀN THẮNG.
+  - Các kèo ánh xạ sang bóng đá thật: Tài/Xỉu (nhiều/ít bàn), Lẻ/Chẵn (tổng
+    bàn lẻ/chẵn), Đặc biệt (0 hoặc 5), Đúng tổng bàn (×9).
+  - Khấu trừ 2% mỗi lượt -> house edge khác nhau theo kèo: Tài/Xỉu ~2%,
+    Lẻ/Chẵn ~6.9%, Đặc biệt & Đúng tổng ~11.8% (điểm dạy học về biên nhà cái).
+  - Dùng chung ví với sảnh kèo; có chế độ Thực 30s / Nhanh 8s.
+  - Đặc tả chi tiết: docs/SPEC-xac-suat-30.md (mục 8: bóng đá hoá).
+
+
+5. CẤU TRÚC THƯ MỤC
+------------------------------------------------------------------------
+  lib/
+   ├─ main.dart        Điểm khởi động, HouseEdgeApp
+   ├─ logic/           Logic thuần Dart, KHÔNG phụ thuộc UI (để unit test):
+   │                     betting_math, football_market, game_state,
+   │                     handicap_settlement, wallet_rules, auth_state...
+   ├─ screens/         Mỗi màn hình một file (login, sportsbook, admin,
+   │                     overround, parlay, martingale, wallet...)
+   ├─ services/        Firebase (auth, firestore, messaging), notifications,
+   │                     livescore, AI analysis
+   ├─ widgets/         Widget tái sử dụng (bet slip, match card, hero banner...)
+   └─ theme/           Bảng màu thương hiệu
+  test/                Unit test cho logic + widget test luồng đăng nhập
+  docs/                Tài liệu & đặc tả
+  plans/               Kế hoạch triển khai
+
+
+6. QUY TẮC CODE
+------------------------------------------------------------------------
+- Logic tính toán (odds, payout, house edge) đặt trong lib/logic/, viết
+  thuần Dart, không import Flutter -> để unit test được.
+- Mỗi màn hình một file; widget dùng ≥2 nơi thì tách ra lib/widgets/.
+- Giữ mỗi file dưới ~200 dòng; phình to thì tách module.
+- Chuỗi hiển thị UI viết tiếng Việt; tên biến/hàm/class viết tiếng Anh.
+- Nguyên tắc: KISS, YAGNI, DRY — không thêm abstraction thừa.
+- Sửa logic trong lib/logic/ thì phải thêm/cập nhật test tương ứng.
+
+
+7. LỆNH THƯỜNG DÙNG
+------------------------------------------------------------------------
+  flutter pub get            Cài dependencies sau khi clone/pull
+  flutter run                Chạy app (chọn emulator/device)
+  flutter test               Chạy toàn bộ test — PHẢI PASS trước khi push
+  flutter analyze            Kiểm tra lỗi phân tích tĩnh
+  flutter build apk --debug  Build APK debug
+
+
+8. GIT FLOW
+------------------------------------------------------------------------
+- Nhánh main luôn ổn định (build được, test pass). Cấm push thẳng lên main.
+- Mọi thay đổi đi qua nhánh riêng + Pull Request, có người review + approve.
+- Conventional commits: feat / fix / refactor / test / docs / chore.
+- Không commit: secret/API key, keystore, file build output, thư mục .claude.
+
+
+========================================================================
+  Lưu ý: Đây là sản phẩm học tập minh hoạ vì sao cờ bạc luôn khiến người
+  chơi thua về dài hạn. KHÔNG phải sản phẩm cá cược thật.
+========================================================================
